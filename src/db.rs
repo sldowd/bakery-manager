@@ -2,6 +2,7 @@
 
 use rusqlite::{Connection, Result, Row, params};
 use crate::models::InventoryItem;
+use crate::models::RecipeCollection;
 
 pub fn connect() -> Result<Connection> {
     Connection::open("bakery.db")
@@ -88,10 +89,10 @@ pub fn seed_recipes(conn: &Connection) -> Result<()> {
 
     for (name, instructions, yield_quantity) in sample_recipes {
         conn.execute(
-            "INSERT INTO inventory (name, unit, quantity, cost_per_unit)
-             VALUES (?1, ?2, ?3, ?4)",
+            "INSERT INTO recipe (name, unit, quantity, cost_per_unit)
+             VALUES (?1, ?2, ?3)",
             params![name, instructions, yield_quantity],
-        )?;
+        );
     }
 
     println!("✅ Sample recipes seeded");
@@ -120,4 +121,27 @@ pub fn get_all_inventory(conn: &Connection) -> Result<Vec<InventoryItem>> {
     }
 
     Ok(inventory)
+}
+
+// Read recipes
+pub fn get_recipe_collection(conn: &Connection) -> Result<Vec<RecipeCollection>> {
+    let mut stmt = conn.prepare(
+        "SELECT id, name, instructions, yield_quantity FROM recipes"
+    )?;
+
+    let recipe_iter = stmt.query_map([], |row: &Row| {
+        Ok(RecipeCollection {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            instructions: row.get(2)?,
+            yield_quantity: row.get(3)?,
+        })
+    })?;
+
+    let mut recipes: Vec<RecipeCollection> = Vec::new();
+    for recipe in recipe_iter {
+        recipes.push(recipe?);
+    }
+
+    Ok(recipes)
 }

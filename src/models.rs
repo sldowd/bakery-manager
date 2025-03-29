@@ -10,7 +10,7 @@ pub struct InventoryItem {
 }
 
 #[derive(Debug)]
-pub struct Recipe {
+pub struct RecipeCollection {
     pub id: i32,
     pub name: String,
     pub instructions: String,

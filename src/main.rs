@@ -1,7 +1,7 @@
 mod db;
 mod models;
 
-use db::{connect, get_all_inventory, init_db, seed_inventory, seed_recipes};
+use db::{connect, get_all_inventory, get_recipe_collection, init_db, seed_inventory, seed_recipes};
 
 fn main() {
     let conn = connect().expect("❌ Failed to connect to DB");
@@ -20,4 +20,16 @@ fn main() {
             item.name, item.quantity, item.unit, item.cost_per_unit
         );
     }
+
+    // fetch recipes from database
+    let recipes = get_recipe_collection(&conn).expect("❌ Failed to get recipe collection");
+
+    println!("\n📖 Recipe Collection:");
+    for recipe in recipes {
+        println!(
+            "- {} (yields {}): {}",
+            recipe.name, recipe.yield_quantity, recipe.instructions
+        );
+    }
+
 }
