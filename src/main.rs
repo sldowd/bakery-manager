@@ -4,11 +4,15 @@ mod models;
 use db::{connect, init_db, seed_inventory};
 
 fn main() {
-    let conn = connect().expect("Failed to connect to SQLite");
-    println!("✅ Connected to bakery.db");
+    println!("🍞 Welcome to the Bakery Manager CLI!");
 
-    init_db(&conn).expect("Failed to initialize schema");
-    println!("✅ Tables initialized");
+    let flour = InventoryItem {
+        id: 1,
+        name: String::from("Flour"),
+        unit: String::from("lbs"),
+        quantity: 25.0,
+        cost_per_unit: 0.50,
+    };
 
-    seed_inventory(&conn).expect("Failed to seed inventory");
+    println!("Current inventory item: {:?}", flour);
 }
