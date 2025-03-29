@@ -66,3 +66,4 @@ pub fn seed_inventory(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
+
