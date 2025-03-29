@@ -1,18 +1,23 @@
 mod db;
 mod models;
 
-use db::{connect, init_db, seed_inventory};
+use db::{connect, get_all_inventory, init_db, seed_inventory, seed_recipes};
 
 fn main() {
-    println!("🍞 Welcome to the Bakery Manager CLI!");
+    let conn = connect().expect("❌ Failed to connect to DB");
+    init_db(&conn).expect("❌ Failed to initialize DB");
+    seed_inventory(&conn).expect("❌ Failed to seed inventory");
+    seed_recipes(&conn).expect("Faild to seed recipes");
 
-    let flour = InventoryItem {
-        id: 1,
-        name: String::from("Flour"),
-        unit: String::from("lbs"),
-        quantity: 25.0,
-        cost_per_unit: 0.50,
-    };
+    // fetch inventory from database
+    let inventory = get_all_inventory(&conn).expect("❌ Failed to fetch inventory");
 
-    println!("Current inventory item: {:?}", flour);
+    // print current inventory
+    println!("📦 Current Inventory:");
+    for item in inventory {
+        println!(
+            "- {}: {:.2} {} at ${:.2}/unit",
+            item.name, item.quantity, item.unit, item.cost_per_unit
+        );
+    }
 }
