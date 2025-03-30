@@ -89,10 +89,10 @@ pub fn seed_recipes(conn: &Connection) -> Result<()> {
 
     for (name, instructions, yield_quantity) in sample_recipes {
         conn.execute(
-            "INSERT INTO recipe (name, unit, quantity, cost_per_unit)
+            "INSERT INTO recipes (name, instructions, yield_quantity)
              VALUES (?1, ?2, ?3)",
             params![name, instructions, yield_quantity],
-        );
+        )?;
     }
 
     println!("✅ Sample recipes seeded");
