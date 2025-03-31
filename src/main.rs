@@ -1,7 +1,10 @@
 mod db;
 mod models;
+mod cli;
 
 use db::{connect, get_all_inventory, get_recipe_collection, init_db, seed_inventory, seed_recipes};
+use cli::show_main_menu;
+
 
 fn main() {
     let conn = connect().expect("❌ Failed to connect to DB");
@@ -30,6 +33,10 @@ fn main() {
             "- {} (yields {}): {}",
             recipe.name, recipe.yield_quantity, recipe.instructions
         );
+    }
+
+    loop {
+        show_main_menu(&conn);
     }
 
 }
