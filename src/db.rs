@@ -145,3 +145,10 @@ pub fn get_recipe_collection(conn: &Connection) -> Result<Vec<RecipeCollection>>
 
     Ok(recipes)
 }
+
+pub fn should_seed(conn: &Connection) -> bool {
+    let count: i64 = conn
+        .query_row("SELECT COUNT(*) FROM inventory", [], |row| row.get(0))
+        .unwrap_or(0);
+    count == 0
+}
