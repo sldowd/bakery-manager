@@ -1,8 +1,10 @@
 // src/db.rs
 
+use rusqlite::Statement;
 use rusqlite::{Connection, Result, Row, params};
 use crate::models::InventoryItem;
 use crate::models::RecipeCollection;
+use crate::models::Transaction;
 
 pub fn connect() -> Result<Connection> {
     Connection::open("bakery.db")
@@ -144,6 +146,27 @@ pub fn get_recipe_collection(conn: &Connection) -> Result<Vec<RecipeCollection>>
     }
 
     Ok(recipes)
+}
+
+pub fn read_transactions(conn: &Connection) -> Result<Vec<Transaction>> {
+    let mut stmt = conn.prepare("SELECT id, date, type, amount, description FROM transactions")?;
+
+    let transaction_iter = stmt.query_map([], |row: &Row| {
+        Ok(Transaction {
+            id: row.get(0)?,
+            date: row.get(1)?,
+            transaction_type: row.get(2)?,
+            amount: row.get(3)?,
+            description: row.get(4)?,
+          })
+    })?;
+
+    let mut transactions: Vec<Transaction> = Vec::new();
+    for transaction in transaction_iter{
+        transactions.push(transaction?);
+    }
+
+    Ok(transactions)
 }
 
 // Function to add an item to inventory

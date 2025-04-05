@@ -1,8 +1,8 @@
 // src/cli.rs
-use crate::db::{add_transaction, add_inventory_item, get_all_inventory, get_recipe_collection};
+use crate::db::{read_transactions, add_transaction, add_inventory_item, get_all_inventory, get_recipe_collection};
 use rusqlite::Connection;
 use time::Date;
-use std::io::{self, Write};
+use std::{io::{self, Write}, ptr::read};
 
 pub fn show_main_menu(conn: &Connection) {
     println!("\n🍞 Welcome to Bakery Manager CLI 🍞");
@@ -10,6 +10,7 @@ pub fn show_main_menu(conn: &Connection) {
     println!("2. View Recipes");
     println!("3. Add Inventory Item");
     println!("4. Add Transaction");
+    println!("5. View Transactions");
     println!("10. Exit");
     print!("Choose an option: ");
     io::stdout().flush().unwrap();
@@ -120,6 +121,17 @@ pub fn show_main_menu(conn: &Connection) {
                     date.trim(),
                     description.trim()
                 );
+            }
+        }
+
+        "5" => {
+            let transactions = read_transactions(conn).expect("Error fetching transactions");
+            println!("Transactions:");
+            for transaction in transactions {
+                println!(
+                    "-Date: {}, Type: {}, Amount: ${}, \nDescription: {}",
+                    transaction.date, transaction.transaction_type, transaction.amount, transaction.description
+                )
             }
         }
 
