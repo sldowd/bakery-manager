@@ -4,6 +4,7 @@ use rusqlite::Connection;
 use time::Date;
 use std::{io::{self, Write}, ptr::read};
 
+// function to displat CLI via main.rs
 pub fn show_main_menu(conn: &Connection) {
     println!("\n🍞 Welcome to Bakery Manager CLI 🍞");
     println!("1. View Inventory");

@@ -148,6 +148,7 @@ pub fn get_recipe_collection(conn: &Connection) -> Result<Vec<RecipeCollection>>
     Ok(recipes)
 }
 
+// Read transactions
 pub fn read_transactions(conn: &Connection) -> Result<Vec<Transaction>> {
     let mut stmt = conn.prepare("SELECT id, date, type, amount, description FROM transactions")?;
 
