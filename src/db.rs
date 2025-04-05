@@ -146,6 +146,22 @@ pub fn get_recipe_collection(conn: &Connection) -> Result<Vec<RecipeCollection>>
     Ok(recipes)
 }
 
+// Function to add an item to inventory
+pub fn add_inventory_item(
+    conn: &Connection,
+    name: &str,
+    unit: &str,
+    quantity: f32,
+    cost_per_unit: f32,
+) -> Result<()> {
+    conn.execute("INSERT INTO inventory (name, unit, quantity, cost_per_unit) VALUES (?1, ?2, ?3, ?4)",
+    params![name, unit, quantity, cost_per_unit],
+    )?;
+    
+    Ok(())
+}
+
+// Function to seed recipes if empty
 pub fn should_seed(conn: &Connection) -> bool {
     let count: i64 = conn
         .query_row("SELECT COUNT(*) FROM inventory", [], |row| row.get(0))

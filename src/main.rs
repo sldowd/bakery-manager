@@ -9,8 +9,10 @@ use cli::show_main_menu;
 fn main() {
     let conn = connect().expect("❌ Failed to connect to DB");
     init_db(&conn).expect("❌ Failed to initialize DB");
-    seed_inventory(&conn).expect("❌ Failed to seed inventory");
-    seed_recipes(&conn).expect("Faild to seed recipes");
+    if db::should_seed(&conn) {
+        seed_inventory(&conn).expect("❌ Failed to seed inventory");
+        seed_recipes(&conn).expect("Faild to seed recipes");
+    }
 
     // fetch inventory from database
     let inventory = get_all_inventory(&conn).expect("❌ Failed to fetch inventory");
