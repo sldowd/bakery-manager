@@ -1,6 +1,7 @@
 // src/cli.rs
-use crate::db::{add_inventory_item, get_all_inventory, get_recipe_collection};
+use crate::db::{add_transaction, add_inventory_item, get_all_inventory, get_recipe_collection};
 use rusqlite::Connection;
+use time::Date;
 use std::io::{self, Write};
 
 pub fn show_main_menu(conn: &Connection) {
@@ -8,7 +9,8 @@ pub fn show_main_menu(conn: &Connection) {
     println!("1. View Inventory");
     println!("2. View Recipes");
     println!("3. Add Inventory Item");
-    println!("4. Exit");
+    println!("4. Add Transaction");
+    println!("10. Exit");
     print!("Choose an option: ");
     io::stdout().flush().unwrap();
 
@@ -73,10 +75,55 @@ pub fn show_main_menu(conn: &Connection) {
                     unit.trim(),
                     cost
                 );
-    }
+            }
 
         }
         "4" => {
+            let mut date = String::new();
+            let mut transaction_type = String::new();
+            let mut amount_str = String::new();
+            let mut description = String::new();
+
+            println!("💰 Add New Transaction");
+
+            print!("Date (YYYY-MM-DD): ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut date).unwrap();
+
+            print!("Transaction type (sale/expense): ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut transaction_type).unwrap();
+
+            print!("Amount: ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut amount_str).unwrap();
+
+            print!("Description: ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut description).unwrap();
+
+            let amount: f32 = amount_str.trim().parse().unwrap_or(0.0);
+
+            if let Err(e) = add_transaction(
+                conn,
+                date.trim(),
+                transaction_type.trim(),
+                amount,
+                description.trim(),
+            ) {
+                println!("❌ Failed to add transaction: {}", e);
+            } else {
+                println!(
+                    "✅ Logged ${:.2} {} on {} — {}",
+                    amount,
+                    transaction_type.trim(),
+                    date.trim(),
+                    description.trim()
+                );
+            }
+        }
+
+        "10" => {
             println!("👋 Exiting. Goodbye!");
             std::process::exit(0);
         }

@@ -161,6 +161,21 @@ pub fn add_inventory_item(
     Ok(())
 }
 
+// Function to add transaction to database
+pub fn add_transaction(
+    conn: &Connection,
+    date: &str,
+    transaction_type: &str,
+    amount: f32,
+    description: &str,
+) -> Result<()> {
+    conn.execute("INSERT INTO transactions (date, type, amount, description) VALUES (?1, ?2, ?3, ?4)",
+    params![date, transaction_type, amount, description],
+    )?;
+    
+    Ok(())
+}
+
 // Function to seed recipes if empty
 pub fn should_seed(conn: &Connection) -> bool {
     let count: i64 = conn
