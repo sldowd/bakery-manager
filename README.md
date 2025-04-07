@@ -68,7 +68,7 @@ This app is designed to:
 |--------------------|-----------|
 | id (PK)            | INTEGER   |
 | date               | TEXT      |
-| type               | TEXT      |
+| transaction_type               | TEXT      |
 | amount             | REAL      |
 | description        | TEXT      |
 
