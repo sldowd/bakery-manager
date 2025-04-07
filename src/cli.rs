@@ -128,6 +128,11 @@ pub fn show_main_menu(conn: &Connection) {
         "5" => {
             let transactions = read_transactions(conn).expect("Error fetching transactions");
             println!("Transactions:");
+            println!(
+                "\n{:<4} | {:<12} | {:<10} | {:>8} | {}",
+                "ID", "Date", "Type", "Amount", "Description"
+            );
+            println!("{}", "-".repeat(60));
             for transaction in transactions {
                 println!(
                     "-Date: {}, Type: {}, Amount: ${}, \nDescription: {}",
@@ -145,10 +150,15 @@ pub fn show_main_menu(conn: &Connection) {
 
             let transactions = transaction_filter(conn, query.trim()).expect("Error fetching transactions");
             println!("Transactions:");
+            println!(
+                "\n{:<4} | {:<12} | {:<10} | {:>8} | {}",
+                "ID", "Date", "Type", "Amount", "Description"
+            );
+            println!("{}", "-".repeat(60));
             for transaction in transactions {
                 println!(
-                    "-Date: {}, Type: {}, Amount: ${}, \nDescription: {}",
-                    transaction.date, transaction.transaction_type, transaction.amount, transaction.description
+                    "{:<4} | {:<12} | {:<10} | ${:>7.2} | {}",
+                    transaction.id, transaction.date, transaction.transaction_type, transaction.amount, transaction.description
                 )
             }
         }

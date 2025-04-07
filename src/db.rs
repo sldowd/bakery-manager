@@ -39,7 +39,7 @@ pub fn init_db(conn: &Connection) -> Result<()> {
         CREATE TABLE IF NOT EXISTS transactions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             date TEXT NOT NULL,
-            type TEXT CHECK(type IN ('sale', 'expense')) NOT NULL,
+            transaction_type TEXT NOT NULL,
             amount REAL NOT NULL,
             description TEXT
         );
@@ -118,7 +118,7 @@ pub fn seed_transactions(conn: &Connection) -> Result<()> {
 
     for (date, tx_type, amount, description) in transactions {
         conn.execute(
-            "INSERT INTO transactions (date, type, amount, description) VALUES (?1, ?2, ?3, ?4)",
+            "INSERT INTO transactions (date, transaction_type, amount, description) VALUES (?1, ?2, ?3, ?4)",
             rusqlite::params![date, tx_type, amount, description],
         )?;
     }
@@ -175,7 +175,7 @@ pub fn get_recipe_collection(conn: &Connection) -> Result<Vec<RecipeCollection>>
 
 // Function returns all transactions
 pub fn read_transactions(conn: &Connection) -> Result<Vec<Transaction>> {
-    let mut stmt = conn.prepare("SELECT id, date, type, amount, description FROM transactions")?;
+    let mut stmt = conn.prepare("SELECT id, date, transaction_type, amount, description FROM transactions")?;
 
     let transaction_iter = stmt.query_map([], |row: &Row| {
         Ok(Transaction {
@@ -198,8 +198,8 @@ pub fn read_transactions(conn: &Connection) -> Result<Vec<Transaction>> {
 // Function to filter transactions and return 
 pub fn transaction_filter(conn: &Connection, query: &str) ->Result<Vec<Transaction>> {
     let mut stmt = conn.prepare(
-        "SELECT id, date, type, amount, description FROM transactions
-        WHERE LOWER(type) = 'sale'")?;
+        "SELECT id, date, transaction_type, amount, description FROM transactions
+        WHERE transaction_type = 'sale'")?;
 
     let transaction_iter = stmt.query_map([], |row: &Row| {
         Ok(Transaction {
