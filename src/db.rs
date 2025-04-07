@@ -197,12 +197,39 @@ pub fn read_transactions(conn: &Connection) -> Result<Vec<Transaction>> {
 
 // Function to filter transactions and return 
 pub fn transaction_filter(conn: &Connection, query: &str) ->Result<Vec<Transaction>> {
+    
     let mut stmt = conn.prepare(
-        // FIXME: Parameterize query, pass in filter
         "SELECT id, date, transaction_type, amount, description FROM transactions 
-        WHERE transaction_type = 'sale'")?;
+        WHERE transaction_type = ?1")?;
+    
 
-    let transaction_iter = stmt.query_map([], |row: &Row| {
+    let transaction_iter = stmt.query_map([query], |row: &Row| {
+        Ok(Transaction {
+            id: row.get(0)?,
+            date: row.get(1)?,
+            transaction_type: row.get(2)?,
+            amount: row.get(3)?,
+            description: row.get(4)?,
+            })
+    })?;
+
+    let mut transactions: Vec<Transaction> = Vec::new();
+    for transaction in transaction_iter{
+        transactions.push(transaction?);
+    }
+
+    Ok(transactions)
+}
+
+// Filter transactions by date
+pub fn filter_by_date(conn: &Connection, query: &str) ->Result<Vec<Transaction>> {
+    
+    let mut stmt = conn.prepare(
+        "SELECT id, date, transaction_type, amount, description FROM transactions 
+        WHERE date = ?1")?;
+    
+
+    let transaction_iter = stmt.query_map([query], |row: &Row| {
         Ok(Transaction {
             id: row.get(0)?,
             date: row.get(1)?,
