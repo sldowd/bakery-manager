@@ -135,8 +135,8 @@ pub fn show_main_menu(conn: &Connection) {
             println!("{}", "-".repeat(60));
             for transaction in transactions {
                 println!(
-                    "-Date: {}, Type: {}, Amount: ${}, \nDescription: {}",
-                    transaction.date, transaction.transaction_type, transaction.amount, transaction.description
+                    "{:<4} | {:<12} | {:<10} | ${:>7.2} | {}",
+                    transaction.id, transaction.date, transaction.transaction_type, transaction.amount, transaction.description
                 )
             }
         }

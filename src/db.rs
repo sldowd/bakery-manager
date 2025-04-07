@@ -198,7 +198,8 @@ pub fn read_transactions(conn: &Connection) -> Result<Vec<Transaction>> {
 // Function to filter transactions and return 
 pub fn transaction_filter(conn: &Connection, query: &str) ->Result<Vec<Transaction>> {
     let mut stmt = conn.prepare(
-        "SELECT id, date, transaction_type, amount, description FROM transactions
+        // FIXME: Parameterize query, pass in filter
+        "SELECT id, date, transaction_type, amount, description FROM transactions 
         WHERE transaction_type = 'sale'")?;
 
     let transaction_iter = stmt.query_map([], |row: &Row| {
