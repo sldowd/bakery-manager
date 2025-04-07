@@ -143,6 +143,7 @@ pub fn show_main_menu(conn: &Connection) {
 
         "6" => {
             // Filter by type or date
+            let mut input = String::new();
             print!("1. Filter by transaction type\n2. Filter by date\n");
             io::stdout().flush().unwrap();
             io::stdin().read_line(&mut input).unwrap();
