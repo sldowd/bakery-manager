@@ -39,7 +39,7 @@ pub fn init_db(conn: &Connection) -> Result<()> {
         CREATE TABLE IF NOT EXISTS transactions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             date TEXT NOT NULL,
-            type TEXT NOT NULL,
+            type TEXT CHECK(type IN ('sale', 'expense')) NOT NULL,
             amount REAL NOT NULL,
             description TEXT
         );
@@ -101,6 +101,31 @@ pub fn seed_recipes(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
+// Seed transaction table
+pub fn seed_transactions(conn: &Connection) -> Result<()> {
+    let transactions = vec![
+        ("2025-04-01", "sale", 125.50, "Morning pastry sales"),
+        ("2025-04-01", "expense", 42.00, "Purchased 50 lbs of flour"),
+        ("2025-04-02", "sale", 98.25, "Coffee + croissant combo special"),
+        ("2025-04-02", "expense", 28.75, "Eggs and butter from supplier"),
+        ("2025-04-03", "sale", 145.00, "Custom catering order for local office"),
+        ("2025-04-03", "expense", 12.99, "Vanilla bean restock"),
+        ("2025-04-04", "sale", 162.30, "Saturday morning rush sales"),
+        ("2025-04-05", "expense", 80.00, "Marketing design for new packaging"),
+        ("2025-04-05", "sale", 73.40, "Farmer's Market pastries"),
+        ("2025-04-06", "sale", 84.15, "Sunday brunch box orders"),
+    ];
+
+    for (date, tx_type, amount, description) in transactions {
+        conn.execute(
+            "INSERT INTO transactions (date, type, amount, description) VALUES (?1, ?2, ?3, ?4)",
+            rusqlite::params![date, tx_type, amount, description],
+        )?;
+    }
+
+    Ok(())
+}
+
 // Read inventory
 pub fn get_all_inventory(conn: &Connection) -> Result<Vec<InventoryItem>> {
     let mut stmt = conn.prepare(
@@ -148,6 +173,7 @@ pub fn get_recipe_collection(conn: &Connection) -> Result<Vec<RecipeCollection>>
     Ok(recipes)
 }
 
+// Function returns all transactions
 pub fn read_transactions(conn: &Connection) -> Result<Vec<Transaction>> {
     let mut stmt = conn.prepare("SELECT id, date, type, amount, description FROM transactions")?;
 
@@ -159,6 +185,30 @@ pub fn read_transactions(conn: &Connection) -> Result<Vec<Transaction>> {
             amount: row.get(3)?,
             description: row.get(4)?,
           })
+    })?;
+
+    let mut transactions: Vec<Transaction> = Vec::new();
+    for transaction in transaction_iter{
+        transactions.push(transaction?);
+    }
+
+    Ok(transactions)
+}
+
+// Function to filter transactions and return 
+pub fn transaction_filter(conn: &Connection, query: &str) ->Result<Vec<Transaction>> {
+    let mut stmt = conn.prepare(
+        "SELECT id, date, type, amount, description FROM transactions
+        WHERE LOWER(type) = 'sale'")?;
+
+    let transaction_iter = stmt.query_map([], |row: &Row| {
+        Ok(Transaction {
+            id: row.get(0)?,
+            date: row.get(1)?,
+            transaction_type: row.get(2)?,
+            amount: row.get(3)?,
+            description: row.get(4)?,
+            })
     })?;
 
     let mut transactions: Vec<Transaction> = Vec::new();

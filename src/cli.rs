@@ -1,5 +1,5 @@
 // src/cli.rs
-use crate::db::{read_transactions, add_transaction, add_inventory_item, get_all_inventory, get_recipe_collection};
+use crate::db::{transaction_filter, read_transactions, add_transaction, add_inventory_item, get_all_inventory, get_recipe_collection};
 use rusqlite::Connection;
 use time::Date;
 use std::{io::{self, Write}, ptr::read};
@@ -11,6 +11,7 @@ pub fn show_main_menu(conn: &Connection) {
     println!("3. Add Inventory Item");
     println!("4. Add Transaction");
     println!("5. View Transactions");
+    println!("6. Filter Transactions");
     println!("10. Exit");
     print!("Choose an option: ");
     io::stdout().flush().unwrap();
@@ -135,6 +136,22 @@ pub fn show_main_menu(conn: &Connection) {
             }
         }
 
+        "6" => {
+            let mut query = String::new();
+
+            print!("Transaction type (sale/expense): ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut query).unwrap();
+
+            let transactions = transaction_filter(conn, query.trim()).expect("Error fetching transactions");
+            println!("Transactions:");
+            for transaction in transactions {
+                println!(
+                    "-Date: {}, Type: {}, Amount: ${}, \nDescription: {}",
+                    transaction.date, transaction.transaction_type, transaction.amount, transaction.description
+                )
+            }
+        }
         "10" => {
             println!("👋 Exiting. Goodbye!");
             std::process::exit(0);
