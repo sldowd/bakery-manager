@@ -5,6 +5,7 @@ use rusqlite::{Connection, Result, Row, params};
 use crate::models::InventoryItem;
 use crate::models::RecipeCollection;
 use crate::models::Transaction;
+use crate::models::RecipeIngredient;
 
 pub fn connect() -> Result<Connection> {
     Connection::open("bakery.db")
@@ -124,6 +125,58 @@ pub fn seed_transactions(conn: &Connection) -> Result<()> {
     }
 
     Ok(())
+}
+
+// Recipe_Ingredients seed
+pub fn seed_recipe_ingredients(conn: &Connection) -> Result<()> {
+    let entries = vec![
+        // Croissant aux Amandes (recipe_id = 1)
+        (1, 1, 0.75),  // Flour
+        (1, 3, 0.50),  // Butter
+        (1, 4, 0.25),  // Eggs
+
+        // Babka (recipe_id = 2)
+        (2, 1, 1.00),  // Flour
+        (2, 2, 0.50),  // Sugar
+        (2, 3, 0.50),  // Butter
+        (2, 4, 0.25),  // Eggs
+
+        // Cinnamon Rolls (recipe_id = 3)
+        (3, 1, 0.50),  // Flour
+        (3, 2, 0.25),  // Sugar
+        (3, 4, 0.50),  // Eggs
+    ];
+
+    for (recipe_id, ingredient_id, qty_required) in entries {
+        let result = conn.execute(
+            "INSERT INTO recipe_ingredients (recipe_id, ingredient_id, quantity_required) VALUES (?1, ?2, ?3)",
+            params![recipe_id, ingredient_id, qty_required],
+        );
+    
+        match result {
+            Ok(_) => println!("✅ Inserted: Recipe {} + Ingredient {} ({})", recipe_id, ingredient_id, qty_required),
+            Err(e) => println!("❌ Failed to insert: Recipe {}, Ingredient {} → {}", recipe_id, ingredient_id, e),
+        }
+    }
+    Ok(())
+}
+
+
+// Function to seed tables if empty
+pub fn should_seed(conn: &Connection) -> bool {
+    let inventory_count: i64 = conn
+        .query_row("SELECT COUNT(*) FROM inventory", [], |row| row.get(0))
+        .unwrap_or(0);
+
+    let recipe_count: i64 = conn
+        .query_row("SELECT COUNT(*) FROM recipes", [], |row| row.get(0))
+        .unwrap_or(0);
+
+    let ingredients_count: i64 = conn
+        .query_row("SELECT COUNT(*) FROM recipe_ingredients", [], |row| row.get(0))
+        .unwrap_or(0);
+
+    inventory_count == 0 || recipe_count == 0 || ingredients_count == 0
 }
 
 // Read inventory
@@ -249,14 +302,14 @@ pub fn filter_by_date(conn: &Connection, query: &str) ->Result<Vec<Transaction>>
 
 // Function to add an item to inventory
 pub fn add_inventory_item(
-    conn: &Connection,
-    name: &str,
-    unit: &str,
-    quantity: f32,
-    cost_per_unit: f32,
-) -> Result<()> {
-    conn.execute("INSERT INTO inventory (name, unit, quantity, cost_per_unit) VALUES (?1, ?2, ?3, ?4)",
-    params![name, unit, quantity, cost_per_unit],
+        conn: &Connection,
+        name: &str,
+        unit: &str,
+        quantity: f32,
+        cost_per_unit: f32,
+    ) -> Result<()> {
+        conn.execute("INSERT INTO inventory (name, unit, quantity, cost_per_unit) VALUES (?1, ?2, ?3, ?4)",
+        params![name, unit, quantity, cost_per_unit],
     )?;
     
     Ok(())
@@ -269,18 +322,43 @@ pub fn add_transaction(
     transaction_type: &str,
     amount: f32,
     description: &str,
-) -> Result<()> {
-    conn.execute("INSERT INTO transactions (date, type, amount, description) VALUES (?1, ?2, ?3, ?4)",
+    ) -> Result<()> {
+    conn.execute("INSERT INTO transactions (date, transaction_type, amount, description) VALUES (?1, ?2, ?3, ?4)",
     params![date, transaction_type, amount, description],
     )?;
     
     Ok(())
 }
 
-// Function to seed recipes if empty
-pub fn should_seed(conn: &Connection) -> bool {
-    let count: i64 = conn
-        .query_row("SELECT COUNT(*) FROM inventory", [], |row| row.get(0))
-        .unwrap_or(0);
-    count == 0
+pub fn get_ingredients_for_recipe(conn: &Connection, recipe_id: i32) -> Result<Vec<(String, f32, String)>> {
+    let mut stmt = conn.prepare(
+        "SELECT i.name, ri.quantity_required, i.unit
+         FROM recipe_ingredients ri
+         JOIN inventory i ON ri.ingredient_id = i.id
+         WHERE ri.recipe_id = ?1"
+    )?;
+
+    let rows = stmt.query_map([recipe_id], |row| {
+        Ok((
+            row.get(0)?, // name
+            row.get(1)?, // quantity_required
+            row.get(2)?, // unit
+        ))
+    })?;
+
+    let mut ingredients = Vec::new();
+    for row in rows {
+        ingredients.push(row?);
+    }
+
+    Ok(ingredients)
 }
+
+pub fn reset_database(conn: &Connection) -> Result<()> {
+    conn.execute("DELETE FROM recipe_ingredients", [])?;
+    conn.execute("DELETE FROM transactions", [])?;
+    conn.execute("DELETE FROM recipes", [])?;
+    conn.execute("DELETE FROM inventory", [])?;
+    Ok(())
+}
+

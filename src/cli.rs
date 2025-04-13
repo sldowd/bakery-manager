@@ -1,5 +1,6 @@
 // src/cli.rs
-use crate::db::{add_inventory_item, add_transaction, filter_by_date, get_all_inventory, get_recipe_collection, read_transactions, transaction_filter};
+use crate::db::{add_inventory_item, add_transaction, filter_by_date, get_all_inventory, get_recipe_collection,
+    get_ingredients_for_recipe, read_transactions, transaction_filter};
 use rusqlite::Connection;
 use time::Date;
 use std::{io::{self, Write}, ptr::read};
@@ -13,7 +14,9 @@ pub fn show_main_menu(conn: &Connection) {
     println!("4. Add Transaction");
     println!("5. View Transactions");
     println!("6. Filter Transactions");
+    println!("7. View Recipe Ingredients");
     println!("10. Exit");
+    println!("11. Debug");
     print!("Choose an option: ");
     io::stdout().flush().unwrap();
 
@@ -26,8 +29,8 @@ pub fn show_main_menu(conn: &Connection) {
             println!("\n📦 Inventory:");
             for item in inventory {
                 println!(
-                    "- {}: {:.2} {} @ ${:.2}",
-                    item.name, item.quantity, item.unit, item.cost_per_unit
+                    "{} - {}: {:.2} {} @ ${:.2}",
+                    item.id, item.name, item.quantity, item.unit, item.cost_per_unit
                 );
             }
         }
@@ -36,8 +39,8 @@ pub fn show_main_menu(conn: &Connection) {
             println!("\n📖 Recipes:");
             for recipe in recipes {
                 println!(
-                    "- {} (yields {}): {}",
-                    recipe.name, recipe.yield_quantity, recipe.instructions
+                    "ID: {} - {} (yields {}): {}",
+                    recipe.id, recipe.name, recipe.yield_quantity, recipe.instructions
                 );
             }
         }
@@ -197,9 +200,42 @@ pub fn show_main_menu(conn: &Connection) {
 
             }
         }
+        "7" => {
+            let recipes = get_recipe_collection(conn).expect("Error fetching recipes");
+
+            println!("\nSelect a recipe to view ingredients:");
+            for recipe in &recipes {
+                println!("{}: {}", recipe.id, recipe.name);
+            }
+        
+            let mut input = String::new();
+            print!("Enter recipe ID: ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut input).unwrap();
+            let recipe_id: i32 = input.trim().parse().unwrap_or(0);
+        
+            let ingredients = get_ingredients_for_recipe(conn, recipe_id).expect("Failed to load ingredients");
+            
+            if ingredients.is_empty() {
+                println!("⚠️ No ingredients found for that recipe.");
+            } else {
+                for (name, qty, unit) in &ingredients {
+                    println!("- {} {} {}", qty, unit, name);
+                }
+            }
+        }
         "10" => {
             println!("👋 Exiting. Goodbye!");
             std::process::exit(0);
+        }
+        "11" => {
+            let count: i32 = conn.query_row(
+                "SELECT COUNT(*) FROM recipe_ingredients",
+                [],
+                |row| row.get(0),
+            ).unwrap();
+            
+            println!("Rows in recipe_ingredients: {}", count);
         }
         _ => println!("❌ Invalid option. Try again."),
     }

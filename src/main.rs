@@ -2,7 +2,8 @@ mod db;
 mod models;
 mod cli;
 
-use db::{connect, get_all_inventory, get_recipe_collection, init_db, seed_inventory, seed_recipes, seed_transactions};
+use db::{connect, get_all_inventory, get_recipe_collection, init_db, seed_inventory,
+    seed_recipe_ingredients, seed_recipes, seed_transactions, reset_database};
 use cli::show_main_menu;
 
 
@@ -10,13 +11,18 @@ fn main() {
     let conn = connect().expect("❌ Failed to connect to DB");
     init_db(&conn).expect("❌ Failed to initialize DB");
     if db::should_seed(&conn) {
+        println!("🛠 Deleting and reseeding database...");
+        // delete data before reseeding
+        reset_database(&conn).expect("❌ Failed to reset database");
+        // see database tables
         seed_inventory(&conn).expect("❌ Failed to seed inventory");
-        seed_recipes(&conn).expect("Faild to seed recipes");
+        seed_recipes(&conn).expect("Failed to seed recipes");
+        seed_recipe_ingredients(&conn).expect("Failed to seed recipe ingredients");
         seed_transactions(&conn).expect("Faild to seed transactions");
     }
 
     // fetch inventory from database
-    let inventory = get_all_inventory(&conn).expect("❌ Failed to fetch inventory");
+/*     let inventory = get_all_inventory(&conn).expect("❌ Failed to fetch inventory");
 
     // print current inventory
     println!("📦 Current Inventory:");
@@ -25,10 +31,10 @@ fn main() {
             "- {}: {:.2} {} at ${:.2}/unit",
             item.name, item.quantity, item.unit, item.cost_per_unit
         );
-    }
+    } */
 
     // fetch recipes from database
-    let recipes = get_recipe_collection(&conn).expect("❌ Failed to get recipe collection");
+   /*  let recipes = get_recipe_collection(&conn).expect("❌ Failed to get recipe collection");
 
     println!("\n📖 Recipe Collection:");
     for recipe in recipes {
@@ -36,7 +42,7 @@ fn main() {
             "- {} (yields {}): {}",
             recipe.name, recipe.yield_quantity, recipe.instructions
         );
-    }
+    } */
 
     loop {
         show_main_menu(&conn);
