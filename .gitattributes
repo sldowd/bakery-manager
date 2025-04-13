@@ -1,0 +1,10 @@
+# Normalize line endings and prevent issues across OSes
+* text=auto
+
+# Binary files (don't try to diff these)
+*.db binary
+
+# Code files (force as text for diff/merge)
+*.rs text
+*.toml text
+*.sql text
