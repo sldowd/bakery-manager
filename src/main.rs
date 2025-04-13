@@ -2,7 +2,7 @@ mod db;
 mod models;
 mod cli;
 
-use db::{connect, get_all_inventory, get_recipe_collection, init_db, seed_inventory, seed_recipes};
+use db::{connect, get_all_inventory, get_recipe_collection, init_db, seed_inventory, seed_recipes, seed_transactions};
 use cli::show_main_menu;
 
 
@@ -12,6 +12,7 @@ fn main() {
     if db::should_seed(&conn) {
         seed_inventory(&conn).expect("❌ Failed to seed inventory");
         seed_recipes(&conn).expect("Faild to seed recipes");
+        seed_transactions(&conn).expect("Faild to seed transactions");
     }
 
     // fetch inventory from database

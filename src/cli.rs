@@ -1,5 +1,5 @@
 // src/cli.rs
-use crate::db::{read_transactions, add_transaction, add_inventory_item, get_all_inventory, get_recipe_collection};
+use crate::db::{add_inventory_item, add_transaction, filter_by_date, get_all_inventory, get_recipe_collection, read_transactions, transaction_filter};
 use rusqlite::Connection;
 use time::Date;
 use std::{io::{self, Write}, ptr::read};
@@ -12,6 +12,7 @@ pub fn show_main_menu(conn: &Connection) {
     println!("3. Add Inventory Item");
     println!("4. Add Transaction");
     println!("5. View Transactions");
+    println!("6. Filter Transactions");
     println!("10. Exit");
     print!("Choose an option: ");
     io::stdout().flush().unwrap();
@@ -128,14 +129,74 @@ pub fn show_main_menu(conn: &Connection) {
         "5" => {
             let transactions = read_transactions(conn).expect("Error fetching transactions");
             println!("Transactions:");
+            println!(
+                "\n{:<4} | {:<12} | {:<10} | {:>8} | {}",
+                "ID", "Date", "Type", "Amount", "Description"
+            );
+            println!("{}", "-".repeat(60));
             for transaction in transactions {
                 println!(
-                    "-Date: {}, Type: {}, Amount: ${}, \nDescription: {}",
-                    transaction.date, transaction.transaction_type, transaction.amount, transaction.description
+                    "{:<4} | {:<12} | {:<10} | ${:>7.2} | {}",
+                    transaction.id, transaction.date, transaction.transaction_type, transaction.amount, transaction.description
                 )
             }
         }
 
+        "6" => {
+            // Filter by type or date
+            let mut input = String::new();
+            print!("1. Filter by transaction type\n2. Filter by date\n");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut input).unwrap();
+
+            match input.trim() {
+                "1" => {
+                    let mut query = String::new();
+                    print!("Transaction type (sale/expense): ");
+                    io::stdout().flush().unwrap();
+                    io::stdin().read_line(&mut query).unwrap();
+
+                    let transactions = transaction_filter(conn, query.trim()).expect("Error fetching transactions");
+                    println!("Transactions:");
+                    println!(
+                        "\n{:<4} | {:<12} | {:<10} | {:>8} | {}",
+                        "ID", "Date", "Type", "Amount", "Description"
+                    );
+                    println!("{}", "-".repeat(60));
+                    for transaction in transactions {
+                        println!(
+                            "{:<4} | {:<12} | {:<10} | ${:>7.2} | {}",
+                            transaction.id, transaction.date, transaction.transaction_type, transaction.amount, transaction.description
+                        )
+                    }
+                }
+                "2" => {
+                        let mut date = String::new();
+                        print!("Date (YYYY-MM-DD): ");
+                        io::stdout().flush().unwrap();
+                        io::stdin().read_line(&mut date).unwrap();
+                        
+                        let transactions = filter_by_date(conn, date.trim()).expect("Error fetching transactions");
+                        println!("Transactions:");
+                        println!(
+                            "\n{:<4} | {:<12} | {:<10} | {:>8} | {}",
+                            "ID", "Date", "Type", "Amount", "Description"
+                        );
+                        println!("{}", "-".repeat(60));
+                        for transaction in transactions {
+                            println!(
+                                "{:<4} | {:<12} | {:<10} | ${:>7.2} | {}",
+                                transaction.id, transaction.date, transaction.transaction_type, transaction.amount, transaction.description
+                            )
+                        }
+                    }
+                &_ => {
+                    println!("Error--input not accepted")
+                }
+                
+
+            }
+        }
         "10" => {
             println!("👋 Exiting. Goodbye!");
             std::process::exit(0);
