@@ -1,6 +1,5 @@
 // src/cli.rs
-use crate::db::{add_inventory_item, add_transaction, filter_by_date, get_all_inventory, get_recipe_collection,
-    get_ingredients_for_recipe, read_transactions, transaction_filter};
+use crate::db::{add_inventory_item, add_transaction, calculate_recipe_cost, deduct_recipe_from_inventory, filter_by_date, get_all_inventory, get_ingredients_for_recipe, get_recipe_collection, read_transactions, transaction_filter};
 use rusqlite::Connection;
 use time::Date;
 use std::{io::{self, Write}, ptr::read};
@@ -15,6 +14,8 @@ pub fn show_main_menu(conn: &Connection) {
     println!("5. View Transactions");
     println!("6. Filter Transactions");
     println!("7. View Recipe Ingredients");
+    println!("8. Calculate Recipe Cost");
+    println!("9. Deduct Recipe from Inventory");
     println!("10. Exit");
     println!("11. Debug");
     print!("Choose an option: ");
@@ -223,6 +224,53 @@ pub fn show_main_menu(conn: &Connection) {
                     println!("- {} {} {}", qty, unit, name);
                 }
             }
+        }
+        "8" => {
+            let recipes = get_recipe_collection(conn).expect("Error fetching recipes");
+
+            println!("\nSelect a recipe to view ingredients:");
+            for recipe in &recipes {
+                println!("{}: {}", recipe.id, recipe.name);
+            }
+
+            let mut input = String::new();
+            print!("Enter recipe ID: ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut input).unwrap();
+            let recipe_id: i32 = input.trim().parse().unwrap_or(0);
+
+            let recipe_cost: f32 = calculate_recipe_cost(conn, recipe_id).expect("Failed to calculate cost");
+
+            if recipe_cost == 0.0 {
+                println!("Calulation failed or returned zero");
+            } else {
+                println!("Total recipe cost: ${:.2}", recipe_cost);
+            }
+
+        }
+        "9" => {
+            let recipes = get_recipe_collection(conn).expect("Error fetching recipes");
+
+            println!("\nSelect a recipe to view ingredients:");
+            for recipe in &recipes {
+                println!("{}: {}", recipe.id, recipe.name);
+            }
+
+            let mut input = String::new();
+            print!("Enter recipe ID: ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut input).unwrap();
+            let recipe_id: i32 = input.trim().parse().unwrap_or(0);
+
+            let result = deduct_recipe_from_inventory(conn, recipe_id);
+
+            //println!("{:?}", result);
+
+            match result {
+                Ok(_) => println!("✅ Recipe deducted from inventory."),
+                Err(e) => println!("❌ Error deducting inventory: {}", e),
+            }
+            
         }
         "10" => {
             println!("👋 Exiting. Goodbye!");

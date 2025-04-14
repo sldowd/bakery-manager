@@ -355,10 +355,61 @@ pub fn get_ingredients_for_recipe(conn: &Connection, recipe_id: i32) -> Result<V
 }
 
 pub fn reset_database(conn: &Connection) -> Result<()> {
+
     conn.execute("DELETE FROM recipe_ingredients", [])?;
     conn.execute("DELETE FROM transactions", [])?;
     conn.execute("DELETE FROM recipes", [])?;
     conn.execute("DELETE FROM inventory", [])?;
     Ok(())
 }
+
+pub fn calculate_recipe_cost(conn: &Connection, recipe_id: i32) -> Result<f32> {
+    // you'll write SQL here and sum cost_per_unit * quantity_required
+    let mut stmt = conn.prepare(
+        "SELECT SUM(i.cost_per_unit * ri.quantity_required)
+        FROM recipe_ingredients ri
+        JOIN inventory i ON ri.ingredient_id = i.id
+        WHERE ri.recipe_id = ?1"
+    )?;
+
+    let total_cost: f32 = stmt.query_row([recipe_id], |row| {row.get(0)}).unwrap_or(0.0);
+
+
+    Ok(total_cost)
+}
+
+pub fn deduct_recipe_from_inventory(conn: &Connection, recipe_id: i32) -> Result<()> {
+    let mut stmt = conn.prepare(
+        "SELECT ingredient_id, quantity_required
+        FROM recipe_ingredients
+        WHERE recipe_id = ?1"
+    )?;
+
+    let rows = stmt.query_map([recipe_id], |row| {
+        Ok((row.get::<_, i32>(0)?, row.get::<_, f32>(1)?))  // (ingredient_id, quantity_required)
+    })?;
+
+    for row in rows {
+        let (ingredient_id, qty_required) = row?;
+    
+
+        let current_qty: f32 = conn.query_row(
+            "SELECT quantity FROM inventory WHERE id = ?1",
+            [ingredient_id],
+            |row| row.get(0)
+        )?;
+
+        let new_qty = current_qty - qty_required;
+        conn.execute(
+            "UPDATE inventory SET quantity = ?1 WHERE id = ?2",
+            params![new_qty, ingredient_id]
+        )?;
+
+        println!("🧾 Ingredient {}: {:.2} → {:.2}", ingredient_id, current_qty, new_qty);
+    }
+
+    Ok(())
+    
+}
+
 
