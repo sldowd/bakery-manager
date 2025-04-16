@@ -2,7 +2,7 @@ mod db;
 mod models;
 mod cli;
 
-use db::{connect, get_all_inventory, get_recipe_collection, init_db, seed_inventory,
+use db::{connect, init_db, seed_inventory,
     seed_recipe_ingredients, seed_recipes, seed_transactions, reset_database};
 use cli::show_main_menu;
 

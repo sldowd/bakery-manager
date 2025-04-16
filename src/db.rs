@@ -1,11 +1,8 @@
 // src/db.rs
-
-use rusqlite::Statement;
 use rusqlite::{Connection, Result, Row, params};
 use crate::models::InventoryItem;
 use crate::models::RecipeCollection;
 use crate::models::Transaction;
-use crate::models::RecipeIngredient;
 
 pub fn connect() -> Result<Connection> {
     Connection::open("bakery.db")

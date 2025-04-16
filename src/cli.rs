@@ -1,8 +1,9 @@
 // src/cli.rs
-use crate::db::{add_inventory_item, add_transaction, calculate_recipe_cost, deduct_recipe_from_inventory, filter_by_date, get_all_inventory, get_ingredients_for_recipe, get_recipe_collection, read_transactions, transaction_filter};
+use crate::db::{add_inventory_item, add_transaction, calculate_recipe_cost, deduct_recipe_from_inventory,
+    filter_by_date, get_all_inventory, get_ingredients_for_recipe, get_recipe_collection,
+    read_transactions, transaction_filter};
 use rusqlite::Connection;
-use time::Date;
-use std::{io::{self, Write}, ptr::read};
+use std::io::{self, Write};
 
 // function to displat CLI via main.rs
 pub fn show_main_menu(conn: &Connection) {

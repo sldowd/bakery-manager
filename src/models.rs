@@ -18,6 +18,7 @@ pub struct RecipeCollection {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct RecipeIngredient {
     pub recipe_id: i32,
     pub ingredient_id: i32,
