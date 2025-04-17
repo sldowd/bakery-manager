@@ -42,8 +42,8 @@ pub fn show_main_menu(conn: &Connection) {
             println!("\n📖 Recipes:");
             for recipe in recipes {
                 println!(
-                    "ID: {} - {} (yields {}): {}",
-                    recipe.id, recipe.name, recipe.yield_quantity, recipe.instructions
+                    "ID: {} - {}\nCategory: {:#} \n(yields {}): \n{:#}\n",
+                    recipe.id, recipe.name, recipe.category, recipe.yield_quantity, recipe.instructions
                 );
             }
         }

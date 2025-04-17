@@ -17,6 +17,7 @@ pub struct RecipeCollection {
     pub name: String,
     pub instructions: String,
     pub yield_quantity: i32,
+    pub category: String,
 }
 
 #[derive(Debug)]

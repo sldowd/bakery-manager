@@ -26,7 +26,8 @@ pub fn init_db(conn: &Connection) -> Result<()> {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             instructions TEXT NOT NULL,
-            yield_quantity INTEGER NOT NULL
+            yield_quantity INTEGER NOT NULL,
+            category TEXT NOT NULL
         );
 
         CREATE TABLE IF NOT EXISTS recipe_ingredients (
@@ -76,25 +77,25 @@ pub fn seed_recipes(conn: &Connection) -> Result<()> {
         (
             "Croissant aux Amandes",
             "1. Prepare croissant dough\n2. Make almond cream\n3. Fill, bake, dust with powdered sugar",
-            12,
+            12, "Pastry",
         ),
         (
             "Babka",
             "1. Make brioche dough\n2. Prepare chocolate filling\n3. Shape and proof\n4. Bake at 350F",
-            8,
+            8, "Bread",
         ),
         (
             "Cinnamon Rolls",
             "1. Roll out dough\n2. Spread cinnamon sugar filling\n3. Slice and bake\n4. Ice while warm",
-            10,
+            10, "Pastry"
         ),
     ];
 
-    for (name, instructions, yield_quantity) in sample_recipes {
+    for (name, instructions, yield_quantity, category) in sample_recipes {
         conn.execute(
-            "INSERT INTO recipes (name, instructions, yield_quantity)
-             VALUES (?1, ?2, ?3)",
-            params![name, instructions, yield_quantity],
+            "INSERT INTO recipes (name, instructions, yield_quantity, category)
+             VALUES (?1, ?2, ?3, ?4)",
+            params![name, instructions, yield_quantity, category],
         )?;
     }
 
@@ -206,7 +207,7 @@ pub fn get_all_inventory(conn: &Connection) -> Result<Vec<InventoryItem>> {
 // Read recipes
 pub fn get_recipe_collection(conn: &Connection) -> Result<Vec<RecipeCollection>> {
     let mut stmt = conn.prepare(
-        "SELECT id, name, instructions, yield_quantity FROM recipes"
+        "SELECT id, name, instructions, yield_quantity, category FROM recipes"
     )?;
 
     let recipe_iter = stmt.query_map([], |row: &Row| {
@@ -215,6 +216,7 @@ pub fn get_recipe_collection(conn: &Connection) -> Result<Vec<RecipeCollection>>
             name: row.get(1)?,
             instructions: row.get(2)?,
             yield_quantity: row.get(3)?,
+            category: row.get(4)?,
         })
     })?;
 
