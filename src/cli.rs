@@ -19,7 +19,7 @@ pub fn show_main_menu(conn: &Connection) {
     println!("9. Deduct Recipe from Inventory");
     println!("10. Print CSV Transaction Report");
     println!("100. Exit");
-    println!("11. Debug");
+    println!("110. Debug");
     print!("Choose an option: ");
     io::stdout().flush().unwrap();
 
