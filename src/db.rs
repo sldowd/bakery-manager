@@ -3,6 +3,9 @@ use rusqlite::{Connection, Result, Row, params};
 use crate::models::InventoryItem;
 use crate::models::RecipeCollection;
 use crate::models::Transaction;
+use std::fs::File;
+use std::io;
+use csv::Writer;
 
 pub fn connect() -> Result<Connection> {
     Connection::open("bakery.db")
@@ -409,4 +412,27 @@ pub fn deduct_recipe_from_inventory(conn: &Connection, recipe_id: i32) -> Result
     
 }
 
+/* fn main() -> std::io::Result<()> {
+    let mut buffer = File::create("foo.txt")?;
 
+    // Writes some prefix of the byte string, not necessarily all of it.
+    buffer.write(b"some bytes")?;
+    Ok(())
+} */
+
+pub fn write_csv_transaction_report(conn: &Connection) -> io::Result<()> {
+    let transactions: Vec<Transaction> = read_transactions(conn).expect("Failed to retrieve transactions.");
+
+    std::fs::create_dir_all("reports")?;
+    let file = File::create("reports/transaction-report.csv")?;
+
+    let mut writer = Writer::from_writer(file);
+
+    for tx in transactions {
+        writer.serialize(tx).expect("Failed to write row");
+    }
+
+    writer.flush()?;
+    println!("Transactions printed to transaction-report.csv");
+    Ok(())
+}

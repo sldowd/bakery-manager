@@ -3,7 +3,12 @@ name = "bakery_manager"
 version = "0.1.0"
 edition = "2021"
 
+
+
 [dependencies]
 rusqlite = "0.30.0"
+csv = "1.2"
 
 time = "0.3"  # for timestamps
+
+serde = { version = "1.0", features = ["derive"] }

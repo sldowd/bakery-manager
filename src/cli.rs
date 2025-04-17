@@ -1,7 +1,7 @@
 // src/cli.rs
 use crate::db::{add_inventory_item, add_transaction, calculate_recipe_cost, deduct_recipe_from_inventory,
     filter_by_date, get_all_inventory, get_ingredients_for_recipe, get_recipe_collection,
-    read_transactions, transaction_filter};
+    read_transactions, transaction_filter, write_csv_transaction_report};
 use rusqlite::Connection;
 use std::io::{self, Write};
 
@@ -17,7 +17,8 @@ pub fn show_main_menu(conn: &Connection) {
     println!("7. View Recipe Ingredients");
     println!("8. Calculate Recipe Cost");
     println!("9. Deduct Recipe from Inventory");
-    println!("10. Exit");
+    println!("10. Print CSV Transaction Report");
+    println!("100. Exit");
     println!("11. Debug");
     print!("Choose an option: ");
     io::stdout().flush().unwrap();
@@ -274,10 +275,13 @@ pub fn show_main_menu(conn: &Connection) {
             
         }
         "10" => {
+            write_csv_transaction_report(conn).expect("Error: Failed to create report");
+        }
+        "100" => {
             println!("👋 Exiting. Goodbye!");
             std::process::exit(0);
         }
-        "11" => {
+        "110" => {
             let count: i32 = conn.query_row(
                 "SELECT COUNT(*) FROM recipe_ingredients",
                 [],

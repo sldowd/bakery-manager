@@ -1,4 +1,6 @@
 // src/models.rs
+use serde::Serialize;
+
 
 #[derive(Debug)]
 pub struct InventoryItem {
@@ -24,11 +26,10 @@ pub struct RecipeIngredient {
     pub ingredient_id: i32,
     pub quantity_required: f32,
 }
-
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Transaction {
     pub id: i32,
-    pub date: String, // We'll parse this later into a chrono::Date
+    pub date: String,
     pub transaction_type: String,
     pub amount: f32,
     pub description: String,
