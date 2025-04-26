@@ -415,6 +415,7 @@ pub fn deduct_recipe_from_inventory(conn: &Connection, recipe_id: i32) -> Result
 }
 
 pub fn write_csv_transaction_report(conn: &Connection) -> io::Result<()> {
+
     let transactions: Vec<Transaction> = read_transactions(conn).expect("Failed to retrieve transactions.");
 
     std::fs::create_dir_all("reports")?;
@@ -429,4 +430,9 @@ pub fn write_csv_transaction_report(conn: &Connection) -> io::Result<()> {
     writer.flush()?;
     println!("Transactions printed to transaction-report.csv");
     Ok(())
+}
+
+// Function calculates msrp based on cost and mark up percentage input
+pub fn calculate_msrp(cost: f32, markup_percentage: f32) -> f32 {
+    cost * (markup_percentage / 100.0)
 }
