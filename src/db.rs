@@ -324,10 +324,19 @@ pub fn add_inventory_item(
     Ok(())
 }
 
-// Function to update an inventory item
+// Function to update an inventory quantity
 pub fn update_inventory_quantity(conn: &Connection, item_id: f32, updated_quantity: f32) -> Result<()> {
     conn.execute("UPDATE inventory SET quantity = ?1 WHERE id = ?2",
     params![updated_quantity, item_id],
+    )?;
+
+    Ok(())
+}
+
+// Function to update inventory cost_per_unit
+pub fn update_inventory_cost(conn: &Connection, item_id: f32, updated_cost: f32) -> Result<()> {
+    conn.execute("UPDATE inventory SET cost_per_unit = ?1 WHERE id = ?2",
+    params![updated_cost, item_id],
     )?;
 
     Ok(())
