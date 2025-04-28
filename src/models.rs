@@ -18,6 +18,7 @@ pub struct RecipeCollection {
     pub instructions: String,
     pub yield_quantity: i32,
     pub category: String,
+    pub msrp_per_unit: Option<f32>,
 }
 
 #[derive(Debug)]

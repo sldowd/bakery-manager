@@ -27,7 +27,7 @@ pub fn init_db(conn: &Connection) -> Result<()> {
             name TEXT NOT NULL,
             instructions TEXT NOT NULL,
             yield_quantity INTEGER NOT NULL,
-            category TEXT NOT NULL
+            category TEXT NOT NULL,
         );
 
         CREATE TABLE IF NOT EXISTS recipe_ingredients (
@@ -46,7 +46,14 @@ pub fn init_db(conn: &Connection) -> Result<()> {
             description TEXT
         );
         "
-    )
+    )?;
+    conn.execute(
+        "ALTER TABLE recipes ADD COLUMN msrp_per_unit REAL",
+        [],
+    ).ok();
+
+    Ok(())    
+    
 }
 
 // seed inventory
@@ -207,7 +214,7 @@ pub fn get_all_inventory(conn: &Connection) -> Result<Vec<InventoryItem>> {
 // Read recipes
 pub fn get_recipe_collection(conn: &Connection) -> Result<Vec<RecipeCollection>> {
     let mut stmt = conn.prepare(
-        "SELECT id, name, instructions, yield_quantity, category FROM recipes"
+        "SELECT id, name, instructions, yield_quantity, category, msrp_per_unit FROM recipes"
     )?;
 
     let recipe_iter = stmt.query_map([], |row: &Row| {
@@ -217,6 +224,7 @@ pub fn get_recipe_collection(conn: &Connection) -> Result<Vec<RecipeCollection>>
             instructions: row.get(2)?,
             yield_quantity: row.get(3)?,
             category: row.get(4)?,
+            msrp_per_unit: row.get(5)?
         })
     })?;
 
@@ -432,7 +440,12 @@ pub fn write_csv_transaction_report(conn: &Connection) -> io::Result<()> {
     Ok(())
 }
 
-// Function calculates msrp based on cost and mark up percentage input
-pub fn calculate_msrp(cost: f32, markup_percentage: f32) -> f32 {
-    cost * (markup_percentage / 100.0)
+// Update RecipeCollection table with unit MSRP once generated
+pub fn update_msrp_for_recipe(conn: &Connection, recipe_id: i32, msrp_per_unit: f32) -> Result<()> {
+    conn.execute(
+        "UPDATE recipes SET msrp_per_unit = ?1 WHERE id = ?2",
+        params![msrp_per_unit, recipe_id],
+    )?;
+    Ok(())
 }
+

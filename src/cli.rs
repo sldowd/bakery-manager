@@ -1,7 +1,7 @@
 // src/cli.rs
 use crate::db::{add_inventory_item, add_transaction, calculate_recipe_cost, deduct_recipe_from_inventory,
     filter_by_date, get_all_inventory, get_ingredients_for_recipe, get_recipe_collection,
-    read_transactions, transaction_filter, write_csv_transaction_report};
+    read_transactions, transaction_filter, write_csv_transaction_report, update_msrp_for_recipe};
 use rusqlite::Connection;
 use std::io::{self, Write};
 
@@ -18,6 +18,7 @@ pub fn show_main_menu(conn: &Connection) {
     println!("8. Calculate Recipe Cost");
     println!("9. Deduct Recipe from Inventory");
     println!("10. Print CSV Transaction Report");
+    println!("11. Calculate and Save unit MSRP for Recipe");
     println!("100. Exit");
     println!("110. Debug");
     print!("Choose an option: ");
@@ -42,8 +43,8 @@ pub fn show_main_menu(conn: &Connection) {
             println!("\n📖 Recipes:");
             for recipe in recipes {
                 println!(
-                    "ID: {} - {}\nCategory: {:#} \n(yields {}): \n{:#}\n",
-                    recipe.id, recipe.name, recipe.category, recipe.yield_quantity, recipe.instructions
+                    "ID: {} - {} MSRP: ${:?}\nCategory: {:#} \n(yields {}): \n{:#}\n",
+                    recipe.id, recipe.name, recipe.msrp_per_unit, recipe.category, recipe.yield_quantity, recipe.instructions
                 );
             }
         }
@@ -277,6 +278,51 @@ pub fn show_main_menu(conn: &Connection) {
         "10" => {
             write_csv_transaction_report(conn).expect("Error: Failed to create report");
         }
+        "11" => {
+            let recipes = get_recipe_collection(conn).expect("Error fetching recipes");
+
+            println!("\nSelect a recipe to calculate MSRP:");
+            for recipe in &recipes {
+                println!("{}: {} (yield: {})", recipe.id, recipe.name, recipe.yield_quantity);
+            }
+
+            let mut input = String::new();
+            print!("Enter recipe ID: ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut input).unwrap();
+            let recipe_id: i32 = input.trim().parse().unwrap_or(0);
+
+            let base_cost = calculate_recipe_cost(conn, recipe_id).expect("Failed to calculate cost");
+            if base_cost == 0.0 {
+                println!("⚠️ No cost data found for this recipe.");
+                return;
+            }
+
+            let recipe = get_recipe_collection(conn)
+                .expect("Failed to fetch recipes")
+                .into_iter()
+                .find(|r| r.id == recipe_id)
+                .expect("Recipe not found");
+
+            let cost_per_unit = base_cost / recipe.yield_quantity as f32;
+
+            println!("Cost per unit: ${:.2}", cost_per_unit);
+
+            let mut markup_input = String::new();
+            print!("Enter desired markup percentage (default 300): ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut markup_input).unwrap();
+            let markup: f32 = markup_input.trim().parse().unwrap_or(300.0);
+
+            let msrp_per_unit = cost_per_unit * (markup / 100.0);
+
+            println!("Calculated MSRP per unit: ${:.2}", msrp_per_unit);
+
+            update_msrp_for_recipe(conn, recipe_id, msrp_per_unit).expect("Failed to update MSRP");
+
+            println!("✅ MSRP saved for {}!", recipe.name);
+        }
+
         "100" => {
             println!("👋 Exiting. Goodbye!");
             std::process::exit(0);
