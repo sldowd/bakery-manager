@@ -351,7 +351,7 @@ pub fn show_main_menu(conn: &Connection) {
                     io::stdin().read_line(&mut input).unwrap();
                     let new_cost: f32 = input.trim().parse().unwrap_or(0.0);
 
-                    update_inventory_cost(conn, inventory_item_id, new_cost);
+                    let _update = update_inventory_cost(conn, inventory_item_id, new_cost);
                 }
                 "2" => {
                     println!("Enter updated item quantity: ");
@@ -359,7 +359,7 @@ pub fn show_main_menu(conn: &Connection) {
                     io::stdin().read_line(&mut input).unwrap();
                     let new_quantity: f32 = input.trim().parse().unwrap_or(0.0);
 
-                    update_inventory_quantity(conn, inventory_item_id, new_quantity);
+                    let _update = update_inventory_quantity(conn, inventory_item_id, new_quantity);
                 }
                 &_ => {
                     println!("Error--Invalid option");
