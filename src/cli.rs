@@ -326,9 +326,10 @@ pub fn show_main_menu(conn: &Connection) {
 
             println!("🍞 Update Inventory Item");
 
+            // 
             let inventory = get_all_inventory(conn).expect("Error fetching inventory");
             println!("\n📦 Select an Item to update:");
-            for item in inventory {
+            for item in &inventory {
                 println!(
                     "{} - {}",
                     item.id, item.name
@@ -340,37 +341,66 @@ pub fn show_main_menu(conn: &Connection) {
             io::stdin().read_line(&mut input).unwrap();
             let inventory_item_id: i32 = input.trim().parse().unwrap_or(0);
 
+            let selected_item = inventory.iter().find(|item| item.id == inventory_item_id);
+
             input.clear();
             
-            println!("🍞 1. Update Item Cost\n🍞 2. Update Item Quantity");
+            println!("What would you like to update?\n1. Update Item Cost\n2. Update Item Quantity");
             io::stdout().flush().unwrap();
             io::stdin().read_line(&mut input).unwrap();
 
             match input.trim() {
                 "1" => {
-                    input.clear();
+                    if let Some(item) = selected_item {
+                        println!("Current cost per unit for {}: ${:.2}", item.name, item.cost_per_unit);
+                        input.clear();
 
-                    println!("Enter updated item cost per unit: ");
-                    
+                        println!("Enter updated item cost per unit: ");
+
+                        io::stdout().flush().unwrap();
+                        io::stdin().read_line(&mut input).unwrap();
+                        let new_cost: f32 = input.trim().parse().unwrap_or(0.0);
+
+                        let _update = update_inventory_cost(conn, inventory_item_id, new_cost);
+
+                        println!("✅ Successfully updated cost to ${:.2}!", new_cost);
+                    } else {
+                        println!("❌ Item not found!");
+                    }
+
+                    // Pause app and wait for user input
+                    let mut dummy_input = String::new();
+                    println!("\nPress Enter to return to the Main Menu...");
                     io::stdout().flush().unwrap();
-                    io::stdin().read_line(&mut input).unwrap();
-                    let new_cost: f32 = input.trim().parse().unwrap_or(0.0);
-
-                    let _update = update_inventory_cost(conn, inventory_item_id, new_cost);
+                    io::stdin().read_line(&mut dummy_input).unwrap();
                 }
                 "2" => {
-                    input.clear();
+                    if let Some(item) = selected_item {
+                        println!("Current quantity for {}: ${:.2}", item.name, item.quantity);
+                        input.clear();
 
-                    println!("Enter updated item quantity: ");
+                        println!("Current quantity: {:.2} {} Enter updated item quantity: ", item.quantity, item.unit);
 
+                        io::stdout().flush().unwrap();
+                        io::stdin().read_line(&mut input).unwrap();
+                        let new_quantity: f32 = input.trim().parse().unwrap_or(0.0);
+
+                        let _update = update_inventory_quantity(conn, inventory_item_id, new_quantity);
+                        
+                        println!("✅ Successfully updated quantity to {:.2} units!", new_quantity);
+                    } else {
+                        println!("❌ Item not found!");
+                    }
+
+                    // Pause app and wait for user input
+                    let mut dummy_input = String::new();
+                    println!("\nPress Enter to return to the Main Menu...");
                     io::stdout().flush().unwrap();
-                    io::stdin().read_line(&mut input).unwrap();
-                    let new_quantity: f32 = input.trim().parse().unwrap_or(0.0);
+                    io::stdin().read_line(&mut dummy_input).unwrap();
 
-                    let _update = update_inventory_quantity(conn, inventory_item_id, new_quantity);
                 }
                 &_ => {
-                    println!("Error--Invalid option");
+                    println!("Error--Invalid option\n Returning to Main Menu...");
                 }
             }
 
