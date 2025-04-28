@@ -169,7 +169,6 @@ pub fn seed_recipe_ingredients(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
-
 // Function to seed tables if empty
 pub fn should_seed(conn: &Connection) -> bool {
     let inventory_count: i64 = conn
@@ -323,6 +322,16 @@ pub fn add_inventory_item(
     )?;
     
     Ok(())
+}
+
+// Function to update an inventory item
+pub fn update_inventory_quantity(conn: &Connection, item_id: f32, updated_quantity: f32) -> Result<()> {
+    conn.execute("UPDATE inventory SET quantity = ?1 WHERE id = ?2",
+    params![updated_quantity, item_id],
+    )?;
+
+    Ok(())
+
 }
 
 // Function to add transaction to database

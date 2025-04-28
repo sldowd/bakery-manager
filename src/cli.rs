@@ -19,6 +19,7 @@ pub fn show_main_menu(conn: &Connection) {
     println!("9. Deduct Recipe from Inventory");
     println!("10. Print CSV Transaction Report");
     println!("11. Calculate and Save unit MSRP for Recipe");
+    println!("12. Update Inventory Item");
     println!("100. Exit");
     println!("110. Debug");
     print!("Choose an option: ");
@@ -322,7 +323,9 @@ pub fn show_main_menu(conn: &Connection) {
 
             println!("✅ MSRP saved for {}!", recipe.name);
         }
-
+        "12" => {
+            
+        }
         "100" => {
             println!("👋 Exiting. Goodbye!");
             std::process::exit(0);
