@@ -339,6 +339,8 @@ pub fn show_main_menu(conn: &Connection) {
             io::stdout().flush().unwrap();
             io::stdin().read_line(&mut input).unwrap();
             let inventory_item_id: i32 = input.trim().parse().unwrap_or(0);
+
+            input.clear();
             
             println!("🍞 1. Update Item Cost\n🍞 2. Update Item Quantity");
             io::stdout().flush().unwrap();
@@ -346,7 +348,10 @@ pub fn show_main_menu(conn: &Connection) {
 
             match input.trim() {
                 "1" => {
+                    input.clear();
+
                     println!("Enter updated item cost per unit: ");
+                    
                     io::stdout().flush().unwrap();
                     io::stdin().read_line(&mut input).unwrap();
                     let new_cost: f32 = input.trim().parse().unwrap_or(0.0);
@@ -354,7 +359,10 @@ pub fn show_main_menu(conn: &Connection) {
                     let _update = update_inventory_cost(conn, inventory_item_id, new_cost);
                 }
                 "2" => {
+                    input.clear();
+
                     println!("Enter updated item quantity: ");
+
                     io::stdout().flush().unwrap();
                     io::stdin().read_line(&mut input).unwrap();
                     let new_quantity: f32 = input.trim().parse().unwrap_or(0.0);
