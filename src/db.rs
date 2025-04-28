@@ -27,7 +27,7 @@ pub fn init_db(conn: &Connection) -> Result<()> {
             name TEXT NOT NULL,
             instructions TEXT NOT NULL,
             yield_quantity INTEGER NOT NULL,
-            category TEXT NOT NULL,
+            category TEXT NOT NULL
         );
 
         CREATE TABLE IF NOT EXISTS recipe_ingredients (
