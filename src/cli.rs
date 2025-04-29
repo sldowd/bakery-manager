@@ -16,6 +16,7 @@ pub fn handle_inventory_menu(conn: &Connection) {
     println!("1. View Inventory");
     println!("2. Add Inventory Item");
     println!("3. Update Inventory Item");
+    println!("100. Exit");
 
     print!("Choose an option: ");
     io::stdout().flush().unwrap();
@@ -34,6 +35,8 @@ pub fn handle_inventory_menu(conn: &Connection) {
                     item.id, item.name, item.quantity, item.unit, item.cost_per_unit
                 );
             }
+            // Pause app and wait for user input
+            wait_for_enter();
         }
         // Add Inventory Item
         "2" => {
@@ -74,6 +77,8 @@ pub fn handle_inventory_menu(conn: &Connection) {
                     cost
                 );
             }
+            // Pause app and wait for user input
+            wait_for_enter();
         }
         // Update Inventory Item
         "3" => {
@@ -164,6 +169,13 @@ pub fn handle_inventory_menu(conn: &Connection) {
                     println!("Error--Invalid option\n Returning to Main Menu...");
                 }
             }
+            // Pause app and wait for user input
+            wait_for_enter();
+        }
+        // Exit Inventory Menu
+        "100" => {
+            println!("👋 Exiting. Goodbye!");
+            std::process::exit(0);
         }
         &_ => {
             println!("Error--Invalid option\n Returning to Main Menu...");
@@ -179,6 +191,7 @@ pub fn handle_recipe_menu(conn: &Connection) {
     println!("3. Calculate Recipe Cost");
     println!("4. Deduct Recipe from Inventory");
     println!("5. Calculate Unit MSRP for Recipe");
+    println!("100. Exit");
 
     print!("Choose an option: ");
     io::stdout().flush().unwrap();
@@ -197,6 +210,8 @@ pub fn handle_recipe_menu(conn: &Connection) {
                     recipe.id, recipe.name, recipe.msrp_per_unit, recipe.category, recipe.yield_quantity, recipe.instructions
                 );
             }
+            // Pause app and wait for user input
+            wait_for_enter();
         }
         // View Recipe Ingredients
         "2" => {
@@ -222,6 +237,8 @@ pub fn handle_recipe_menu(conn: &Connection) {
                     println!("- {} {} {}", qty, unit, name);
                 }
             }
+            // Pause app and wait for user input
+            wait_for_enter();
         }
         // Calculate Recipe Cost
         "3" => {
@@ -245,7 +262,8 @@ pub fn handle_recipe_menu(conn: &Connection) {
             } else {
                 println!("Total recipe cost: ${:.2}", recipe_cost);
             }
-
+            // Pause app and wait for user input
+            wait_for_enter();
         }
         // Deduct Recipe from Inventory
         "4" => {
@@ -268,7 +286,8 @@ pub fn handle_recipe_menu(conn: &Connection) {
                 Ok(_) => println!("✅ Recipe deducted from inventory."),
                 Err(e) => println!("❌ Error deducting inventory: {}", e),
             }
-            
+            // Pause app and wait for user input
+            wait_for_enter();
         }
         // Calculate Unit MSRP for Recipe
         "5" => {
@@ -314,6 +333,14 @@ pub fn handle_recipe_menu(conn: &Connection) {
             update_msrp_for_recipe(conn, recipe_id, msrp_per_unit).expect("Failed to update MSRP");
 
             println!("✅ MSRP saved for {}!", recipe.name);
+
+            // Pause app and wait for user input
+            wait_for_enter();
+        }
+        // Exit Recipe Menu
+        "100" => {
+            println!("👋 Exiting. Goodbye!");
+            std::process::exit(0);
         }
         &_ => {
             println!("Error--Invalid option\n Returning to Main Menu...");
@@ -328,6 +355,7 @@ pub fn handle_transaction_menu(conn: &Connection) {
     println!("2. View Transactions");
     println!("3. Filter Transactions");
     println!("4. Print CSV Transaction Report");
+    println!("100. Exit");
 
     print!("Choose an option: ");
     io::stdout().flush().unwrap();
@@ -380,6 +408,8 @@ pub fn handle_transaction_menu(conn: &Connection) {
                     description.trim()
                 );
             }
+            // Pause app and wait for user input
+            wait_for_enter();
         }
         // View Transactions
         "2" => {
@@ -396,6 +426,8 @@ pub fn handle_transaction_menu(conn: &Connection) {
                     transaction.id, transaction.date, transaction.transaction_type, transaction.amount, transaction.description
                 )
             }
+            // Pause app and wait for user input
+            wait_for_enter();
         }
         // Filter Transactions
         "3" => {
@@ -425,6 +457,8 @@ pub fn handle_transaction_menu(conn: &Connection) {
                             transaction.id, transaction.date, transaction.transaction_type, transaction.amount, transaction.description
                         )
                     }
+                    // Pause app and wait for user input
+                    wait_for_enter();
                 }
                 "2" => {
                         let mut date = String::new();
@@ -445,6 +479,8 @@ pub fn handle_transaction_menu(conn: &Connection) {
                                 transaction.id, transaction.date, transaction.transaction_type, transaction.amount, transaction.description
                             )
                         }
+                        // Pause app and wait for user input
+                        wait_for_enter();
                     }
                 &_ => {
                     println!("Error--input not accepted")
@@ -452,18 +488,53 @@ pub fn handle_transaction_menu(conn: &Connection) {
                 
 
             }
+            // Pause app and wait for user input
+            wait_for_enter();
         }
         // Print CSV Transaction Report
         "4" => {
             write_csv_transaction_report(conn).expect("Error: Failed to create report");
+
+            println!("✅ Report created successfully");
+
+            // Pause app and wait for user input
+            wait_for_enter();
+        }
+        // Exit Transaction Menu
+        "100" => {
+            println!("👋 Exiting. Goodbye!");
+            std::process::exit(0);
         }
         &_ => {
             println!("Error--Invalid option\n Returning to Main Menu...");
         }
+    }
 }
 
 pub fn handle_utilities_menu(conn: &Connection) {
-    
+    println!("🛠 Utilities");
+    println!("1. Debug");
+    print!("Choose an option: ");
+    io::stdout().flush().unwrap();
+
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+
+    match input.trim() {
+        
+        "1" => {
+            let count: i32 = conn.query_row(
+                "SELECT COUNT(*) FROM recipe_ingredients",
+                [],
+                |row| row.get(0),
+            ).unwrap();
+            
+            println!("Rows in recipe_ingredients: {}", count);
+            // Pause app and wait for user input
+            wait_for_enter();
+        }
+        _ => println!("❌ Invalid option. Try again."),
+    }
 
 }
 
@@ -471,11 +542,23 @@ pub fn handle_utilities_menu(conn: &Connection) {
 pub fn show_main_menu(conn: &Connection) {
     println!("\n🍞 Welcome to Bakery Manager CLI 🍞");
     
-    
-    
+    println!("🍞 1. Inventory Management");
+    println!("📖 2. Recipe Management");
+    println!("💰 3. Transaction Management");
+    println!("🛠 4. Utilities");
 
-    
-    
+    print!("Choose a category: ");
+    io::stdout().flush().unwrap();
+
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+
+    match input.trim() {
+        "1" => handle_inventory_menu(conn),
+        "2" => handle_recipe_menu(conn),
+        "3" => handle_transaction_menu(conn),
+        "4" => handle_utilities_menu(conn),
+        _ => println!("❌ Invalid option. Try again."),
+    }
     
 }
-
