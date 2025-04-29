@@ -173,7 +173,153 @@ pub fn handle_inventory_menu(conn: &Connection) {
 }
 
 pub fn handle_recipe_menu(conn: &Connection) {
-    
+    println!("📖 Recipe Management");
+    println!("1. View Recipes");
+    println!("2. View Recipe Ingredients");
+    println!("3. Calculate Recipe Cost");
+    println!("4. Deduct Recipe from Inventory");
+    println!("5. Calculate Unit MSRP for Recipe");
+
+    print!("Choose an option: ");
+    io::stdout().flush().unwrap();
+
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+
+    match input.trim() {
+        // View Recipes
+        "1" => {
+            let recipes = get_recipe_collection(conn).expect("Error fetching recipes");
+            println!("\n📖 Recipes:");
+            for recipe in recipes {
+                println!(
+                    "ID: {} - {} MSRP: ${:?}\nCategory: {:#} \n(yields {}): \n{:#}\n",
+                    recipe.id, recipe.name, recipe.msrp_per_unit, recipe.category, recipe.yield_quantity, recipe.instructions
+                );
+            }
+        }
+        // View Recipe Ingredients
+        "2" => {
+            let recipes = get_recipe_collection(conn).expect("Error fetching recipes");
+
+            println!("\nSelect a recipe to view ingredients:");
+            for recipe in &recipes {
+                println!("{}: {}", recipe.id, recipe.name);
+            }
+        
+            let mut input = String::new();
+            print!("Enter recipe ID: ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut input).unwrap();
+            let recipe_id: i32 = input.trim().parse().unwrap_or(0);
+        
+            let ingredients = get_ingredients_for_recipe(conn, recipe_id).expect("Failed to load ingredients");
+            
+            if ingredients.is_empty() {
+                println!("⚠️ No ingredients found for that recipe.");
+            } else {
+                for (name, qty, unit) in &ingredients {
+                    println!("- {} {} {}", qty, unit, name);
+                }
+            }
+        }
+        // Calculate Recipe Cost
+        "3" => {
+            let recipes = get_recipe_collection(conn).expect("Error fetching recipes");
+
+            println!("\nSelect a recipe to view ingredients:");
+            for recipe in &recipes {
+                println!("{}: {}", recipe.id, recipe.name);
+            }
+
+            let mut input = String::new();
+            print!("Enter recipe ID: ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut input).unwrap();
+            let recipe_id: i32 = input.trim().parse().unwrap_or(0);
+
+            let recipe_cost: f32 = calculate_recipe_cost(conn, recipe_id).expect("Failed to calculate cost");
+
+            if recipe_cost == 0.0 {
+                println!("Calulation failed or returned zero");
+            } else {
+                println!("Total recipe cost: ${:.2}", recipe_cost);
+            }
+
+        }
+        // Deduct Recipe from Inventory
+        "4" => {
+            let recipes = get_recipe_collection(conn).expect("Error fetching recipes");
+
+            println!("\nSelect a recipe to view ingredients:");
+            for recipe in &recipes {
+                println!("{}: {}", recipe.id, recipe.name);
+            }
+
+            let mut input = String::new();
+            print!("Enter recipe ID: ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut input).unwrap();
+            let recipe_id: i32 = input.trim().parse().unwrap_or(0);
+
+            let result = deduct_recipe_from_inventory(conn, recipe_id);
+
+            match result {
+                Ok(_) => println!("✅ Recipe deducted from inventory."),
+                Err(e) => println!("❌ Error deducting inventory: {}", e),
+            }
+            
+        }
+        // Calculate Unit MSRP for Recipe
+        "5" => {
+            let recipes = get_recipe_collection(conn).expect("Error fetching recipes");
+
+            println!("\nSelect a recipe to calculate MSRP:");
+            for recipe in &recipes {
+                println!("{}: {} (yield: {})", recipe.id, recipe.name, recipe.yield_quantity);
+            }
+
+            let mut input = String::new();
+            print!("Enter recipe ID: ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut input).unwrap();
+            let recipe_id: i32 = input.trim().parse().unwrap_or(0);
+
+            let base_cost = calculate_recipe_cost(conn, recipe_id).expect("Failed to calculate cost");
+            if base_cost == 0.0 {
+                println!("⚠️ No cost data found for this recipe.");
+                return;
+            }
+
+            let recipe = get_recipe_collection(conn)
+                .expect("Failed to fetch recipes")
+                .into_iter()
+                .find(|r| r.id == recipe_id)
+                .expect("Recipe not found");
+
+            let cost_per_unit = base_cost / recipe.yield_quantity as f32;
+
+            println!("Cost per unit: ${:.2}", cost_per_unit);
+
+            let mut markup_input = String::new();
+            print!("Enter desired markup percentage (default 300): ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut markup_input).unwrap();
+            let markup: f32 = markup_input.trim().parse().unwrap_or(300.0);
+
+            let msrp_per_unit = cost_per_unit * (markup / 100.0);
+
+            println!("Calculated MSRP per unit: ${:.2}", msrp_per_unit);
+
+            update_msrp_for_recipe(conn, recipe_id, msrp_per_unit).expect("Failed to update MSRP");
+
+            println!("✅ MSRP saved for {}!", recipe.name);
+        }
+        &_ => {
+            println!("Error--Invalid option\n Returning to Main Menu...");
+        }
+    }
+
 }
 
 pub fn handle_transaction_menu(conn: &Connection) {
@@ -189,16 +335,14 @@ pub fn handle_utilities_menu(conn: &Connection) {
 pub fn show_main_menu(conn: &Connection) {
     println!("\n🍞 Welcome to Bakery Manager CLI 🍞");
     
-    println!("2. View Recipes");
+    
     
     println!("4. Add Transaction");
     println!("5. View Transactions");
     println!("6. Filter Transactions");
-    println!("7. View Recipe Ingredients");
-    println!("8. Calculate Recipe Cost");
-    println!("9. Deduct Recipe from Inventory");
+    
     println!("10. Print CSV Transaction Report");
-    println!("11. Calculate and Save unit MSRP for Recipe");
+    
     
     println!("100. Exit");
     println!("110. Debug");
@@ -210,56 +354,7 @@ pub fn show_main_menu(conn: &Connection) {
 
     match input.trim() {
         
-        "2" => {
-            let recipes = get_recipe_collection(conn).expect("Error fetching recipes");
-            println!("\n📖 Recipes:");
-            for recipe in recipes {
-                println!(
-                    "ID: {} - {} MSRP: ${:?}\nCategory: {:#} \n(yields {}): \n{:#}\n",
-                    recipe.id, recipe.name, recipe.msrp_per_unit, recipe.category, recipe.yield_quantity, recipe.instructions
-                );
-            }
-        }
-        "3" => {
-            let mut name = String::new();
-            let mut unit = String::new();
-            let mut quantity_str = String::new();
-            let mut cost_str = String::new();
-
-            println!("🍞 Add New Inventory Item");
-
-            print!("Name: ");
-            io::stdout().flush().unwrap();
-            io::stdin().read_line(&mut name).unwrap();
-
-            print!("Unit (e.g. lbs, oz): ");
-            io::stdout().flush().unwrap();
-            io::stdin().read_line(&mut unit).unwrap();
-
-            print!("Quantity: ");
-            io::stdout().flush().unwrap();
-            io::stdin().read_line(&mut quantity_str).unwrap();
-
-            print!("Cost per unit: ");
-            io::stdout().flush().unwrap();
-            io::stdin().read_line(&mut cost_str).unwrap();
-
-            let quantity: f32 = quantity_str.trim().parse().unwrap_or(0.0);
-            let cost: f32 = cost_str.trim().parse().unwrap_or(0.0);
-
-            if let Err(e) = add_inventory_item(conn, name.trim(), unit.trim(), quantity, cost) {
-                println!("❌ Failed to add item: {}", e);
-            } else {
-                println!(
-                    "✅ Added {} ({} {}) at ${:.2}/unit",
-                    name.trim(),
-                    quantity,
-                    unit.trim(),
-                    cost
-                );
-            }
-
-        }
+        
         "4" => {
             let mut date = String::new();
             let mut transaction_type = String::new();
@@ -376,124 +471,11 @@ pub fn show_main_menu(conn: &Connection) {
 
             }
         }
-        "7" => {
-            let recipes = get_recipe_collection(conn).expect("Error fetching recipes");
-
-            println!("\nSelect a recipe to view ingredients:");
-            for recipe in &recipes {
-                println!("{}: {}", recipe.id, recipe.name);
-            }
         
-            let mut input = String::new();
-            print!("Enter recipe ID: ");
-            io::stdout().flush().unwrap();
-            io::stdin().read_line(&mut input).unwrap();
-            let recipe_id: i32 = input.trim().parse().unwrap_or(0);
-        
-            let ingredients = get_ingredients_for_recipe(conn, recipe_id).expect("Failed to load ingredients");
-            
-            if ingredients.is_empty() {
-                println!("⚠️ No ingredients found for that recipe.");
-            } else {
-                for (name, qty, unit) in &ingredients {
-                    println!("- {} {} {}", qty, unit, name);
-                }
-            }
-        }
-        "8" => {
-            let recipes = get_recipe_collection(conn).expect("Error fetching recipes");
-
-            println!("\nSelect a recipe to view ingredients:");
-            for recipe in &recipes {
-                println!("{}: {}", recipe.id, recipe.name);
-            }
-
-            let mut input = String::new();
-            print!("Enter recipe ID: ");
-            io::stdout().flush().unwrap();
-            io::stdin().read_line(&mut input).unwrap();
-            let recipe_id: i32 = input.trim().parse().unwrap_or(0);
-
-            let recipe_cost: f32 = calculate_recipe_cost(conn, recipe_id).expect("Failed to calculate cost");
-
-            if recipe_cost == 0.0 {
-                println!("Calulation failed or returned zero");
-            } else {
-                println!("Total recipe cost: ${:.2}", recipe_cost);
-            }
-
-        }
-        "9" => {
-            let recipes = get_recipe_collection(conn).expect("Error fetching recipes");
-
-            println!("\nSelect a recipe to view ingredients:");
-            for recipe in &recipes {
-                println!("{}: {}", recipe.id, recipe.name);
-            }
-
-            let mut input = String::new();
-            print!("Enter recipe ID: ");
-            io::stdout().flush().unwrap();
-            io::stdin().read_line(&mut input).unwrap();
-            let recipe_id: i32 = input.trim().parse().unwrap_or(0);
-
-            let result = deduct_recipe_from_inventory(conn, recipe_id);
-
-            //println!("{:?}", result);
-
-            match result {
-                Ok(_) => println!("✅ Recipe deducted from inventory."),
-                Err(e) => println!("❌ Error deducting inventory: {}", e),
-            }
-            
-        }
         "10" => {
             write_csv_transaction_report(conn).expect("Error: Failed to create report");
         }
-        "11" => {
-            let recipes = get_recipe_collection(conn).expect("Error fetching recipes");
-
-            println!("\nSelect a recipe to calculate MSRP:");
-            for recipe in &recipes {
-                println!("{}: {} (yield: {})", recipe.id, recipe.name, recipe.yield_quantity);
-            }
-
-            let mut input = String::new();
-            print!("Enter recipe ID: ");
-            io::stdout().flush().unwrap();
-            io::stdin().read_line(&mut input).unwrap();
-            let recipe_id: i32 = input.trim().parse().unwrap_or(0);
-
-            let base_cost = calculate_recipe_cost(conn, recipe_id).expect("Failed to calculate cost");
-            if base_cost == 0.0 {
-                println!("⚠️ No cost data found for this recipe.");
-                return;
-            }
-
-            let recipe = get_recipe_collection(conn)
-                .expect("Failed to fetch recipes")
-                .into_iter()
-                .find(|r| r.id == recipe_id)
-                .expect("Recipe not found");
-
-            let cost_per_unit = base_cost / recipe.yield_quantity as f32;
-
-            println!("Cost per unit: ${:.2}", cost_per_unit);
-
-            let mut markup_input = String::new();
-            print!("Enter desired markup percentage (default 300): ");
-            io::stdout().flush().unwrap();
-            io::stdin().read_line(&mut markup_input).unwrap();
-            let markup: f32 = markup_input.trim().parse().unwrap_or(300.0);
-
-            let msrp_per_unit = cost_per_unit * (markup / 100.0);
-
-            println!("Calculated MSRP per unit: ${:.2}", msrp_per_unit);
-
-            update_msrp_for_recipe(conn, recipe_id, msrp_per_unit).expect("Failed to update MSRP");
-
-            println!("✅ MSRP saved for {}!", recipe.name);
-        }
+        
         "12" => {
             
 
