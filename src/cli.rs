@@ -546,6 +546,7 @@ pub fn show_main_menu(conn: &Connection) {
     println!("📖 2. Recipe Management");
     println!("💰 3. Transaction Management");
     println!("🛠 4. Utilities");
+    println!("100. Exit");
 
     print!("Choose a category: ");
     io::stdout().flush().unwrap();
@@ -558,6 +559,11 @@ pub fn show_main_menu(conn: &Connection) {
         "2" => handle_recipe_menu(conn),
         "3" => handle_transaction_menu(conn),
         "4" => handle_utilities_menu(conn),
+        // Exit Menu
+        "100" => {
+            println!("👋 Exiting. Goodbye!");
+            std::process::exit(0);
+        }
         _ => println!("❌ Invalid option. Try again."),
     }
     
