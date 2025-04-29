@@ -323,29 +323,12 @@ pub fn handle_recipe_menu(conn: &Connection) {
 }
 
 pub fn handle_transaction_menu(conn: &Connection) {
+    println!("💰 Transaction Management");
+    println!("1. Add Transaction");
+    println!("2. View Transactions");
+    println!("3. Filter Transactions");
+    println!("4. Print CSV Transaction Report");
 
-}
-
-pub fn handle_utilities_menu(conn: &Connection) {
-
-
-}
-
-// function to displat CLI via main.rs
-pub fn show_main_menu(conn: &Connection) {
-    println!("\n🍞 Welcome to Bakery Manager CLI 🍞");
-    
-    
-    
-    println!("4. Add Transaction");
-    println!("5. View Transactions");
-    println!("6. Filter Transactions");
-    
-    println!("10. Print CSV Transaction Report");
-    
-    
-    println!("100. Exit");
-    println!("110. Debug");
     print!("Choose an option: ");
     io::stdout().flush().unwrap();
 
@@ -353,9 +336,8 @@ pub fn show_main_menu(conn: &Connection) {
     io::stdin().read_line(&mut input).unwrap();
 
     match input.trim() {
-        
-        
-        "4" => {
+        // Add Transaction
+        "1" => {
             let mut date = String::new();
             let mut transaction_type = String::new();
             let mut amount_str = String::new();
@@ -399,8 +381,8 @@ pub fn show_main_menu(conn: &Connection) {
                 );
             }
         }
-
-        "5" => {
+        // View Transactions
+        "2" => {
             let transactions = read_transactions(conn).expect("Error fetching transactions");
             println!("Transactions:");
             println!(
@@ -415,8 +397,8 @@ pub fn show_main_menu(conn: &Connection) {
                 )
             }
         }
-
-        "6" => {
+        // Filter Transactions
+        "3" => {
             // Filter by type or date
             let mut input = String::new();
             print!("1. Filter by transaction type\n2. Filter by date\n");
@@ -471,30 +453,29 @@ pub fn show_main_menu(conn: &Connection) {
 
             }
         }
-        
-        "10" => {
+        // Print CSV Transaction Report
+        "4" => {
             write_csv_transaction_report(conn).expect("Error: Failed to create report");
         }
-        
-        "12" => {
-            
+        &_ => {
+            println!("Error--Invalid option\n Returning to Main Menu...");
+        }
+}
 
-            
-        }
-        "100" => {
-            println!("👋 Exiting. Goodbye!");
-            std::process::exit(0);
-        }
-        "110" => {
-            let count: i32 = conn.query_row(
-                "SELECT COUNT(*) FROM recipe_ingredients",
-                [],
-                |row| row.get(0),
-            ).unwrap();
-            
-            println!("Rows in recipe_ingredients: {}", count);
-        }
-        _ => println!("❌ Invalid option. Try again."),
-    }
+pub fn handle_utilities_menu(conn: &Connection) {
+    
+
+}
+
+// function to displat CLI via main.rs
+pub fn show_main_menu(conn: &Connection) {
+    println!("\n🍞 Welcome to Bakery Manager CLI 🍞");
+    
+    
+    
+
+    
+    
+    
 }
 
