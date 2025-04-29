@@ -1,5 +1,7 @@
 // src/cli.rs
-use crate::db::{add_inventory_item, add_transaction, calculate_recipe_cost, deduct_recipe_from_inventory, filter_by_date, get_all_inventory, get_ingredients_for_recipe, get_recipe_collection, read_transactions, transaction_filter, update_inventory_cost, update_inventory_quantity, update_msrp_for_recipe, write_csv_transaction_report};
+use crate::db::{add_inventory_item, add_transaction, calculate_recipe_cost, deduct_recipe_from_inventory, filter_by_date, 
+    get_all_inventory, get_ingredients_for_recipe, get_recipe_collection, read_transactions, transaction_filter, 
+    update_inventory_cost, update_inventory_quantity, update_msrp_for_recipe, write_csv_transaction_report, reset_database};
 use rusqlite::Connection;
 use std::io::{self, Write};
 
@@ -532,7 +534,10 @@ pub fn handle_utilities_menu(conn: &Connection) {
             todo!("Implement Backup Database feature");
         }
         "2" => {
-            todo!("Implement Reset Database feature");
+            let _ = reset_database(conn);
+            println!("✅ Database has been reset");
+            // Pause app and wait for user input
+            wait_for_enter();
         }
         "3" => {
             todo!("Implement View System Info feature");
