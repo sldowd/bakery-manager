@@ -3,6 +3,7 @@ use crate::db::{add_inventory_item, add_transaction, calculate_recipe_cost, dedu
 use rusqlite::Connection;
 use std::io::{self, Write};
 
+// Pauses app and waits for user input
 pub fn wait_for_enter() {
     let mut dummy_input = String::new();
     println!("\nPress Enter to return to the Main Menu...");
@@ -10,23 +11,12 @@ pub fn wait_for_enter() {
     io::stdin().read_line(&mut dummy_input).unwrap();
 }
 
-// function to displat CLI via main.rs
-pub fn show_main_menu(conn: &Connection) {
-    println!("\n🍞 Welcome to Bakery Manager CLI 🍞");
+pub fn handle_inventory_menu(conn: &Connection) {
+    println!("🍞 Inventory Management");
     println!("1. View Inventory");
-    println!("2. View Recipes");
-    println!("3. Add Inventory Item");
-    println!("4. Add Transaction");
-    println!("5. View Transactions");
-    println!("6. Filter Transactions");
-    println!("7. View Recipe Ingredients");
-    println!("8. Calculate Recipe Cost");
-    println!("9. Deduct Recipe from Inventory");
-    println!("10. Print CSV Transaction Report");
-    println!("11. Calculate and Save unit MSRP for Recipe");
-    println!("12. Update Inventory Item");
-    println!("100. Exit");
-    println!("110. Debug");
+    println!("2. Add Inventory Item");
+    println!("3. Update Inventory Item");
+
     print!("Choose an option: ");
     io::stdout().flush().unwrap();
 
@@ -34,6 +24,7 @@ pub fn show_main_menu(conn: &Connection) {
     io::stdin().read_line(&mut input).unwrap();
 
     match input.trim() {
+        // View Inventory
         "1" => {
             let inventory = get_all_inventory(conn).expect("Error fetching inventory");
             println!("\n📦 Inventory:");
@@ -44,6 +35,181 @@ pub fn show_main_menu(conn: &Connection) {
                 );
             }
         }
+        // Add Inventory Item
+        "2" => {
+            let mut name = String::new();
+            let mut unit = String::new();
+            let mut quantity_str = String::new();
+            let mut cost_str = String::new();
+
+            println!("🍞 Add New Inventory Item");
+
+            print!("Name: ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut name).unwrap();
+
+            print!("Unit (e.g. lbs, oz): ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut unit).unwrap();
+
+            print!("Quantity: ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut quantity_str).unwrap();
+
+            print!("Cost per unit: ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut cost_str).unwrap();
+
+            let quantity: f32 = quantity_str.trim().parse().unwrap_or(0.0);
+            let cost: f32 = cost_str.trim().parse().unwrap_or(0.0);
+
+            if let Err(e) = add_inventory_item(conn, name.trim(), unit.trim(), quantity, cost) {
+                println!("❌ Failed to add item: {}", e);
+            } else {
+                println!(
+                    "✅ Added {} ({} {}) at ${:.2}/unit",
+                    name.trim(),
+                    quantity,
+                    unit.trim(),
+                    cost
+                );
+            }
+        }
+        // Update Inventory Item
+        "3" => {
+            let mut input = String::new();
+
+            println!("🍞 Update Inventory Item");
+
+            // Fetch inventory
+            let inventory = get_all_inventory(conn).expect("Error fetching inventory");
+            println!("\n📦 Select an Item to update:");
+            for item in &inventory {
+                println!(
+                    "{} - {}",
+                    item.id, item.name
+                );
+            }
+            
+            // Identify inventory item to update
+            print!("Enter item ID: ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut input).unwrap();
+            let inventory_item_id: i32 = input.trim().parse().unwrap_or(0);
+
+            // Find selected item
+            let selected_item = inventory.iter().find(|item| item.id == inventory_item_id);
+
+            // Clear input before next read
+            input.clear();
+            
+            // Identify which value to update
+            println!("What would you like to update?\n1. Update Item Cost\n2. Update Item Quantity");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut input).unwrap();
+
+            match input.trim() {
+                // Update item cost
+                "1" => {
+                    if let Some(item) = selected_item {
+                        // Output current cost per unit of selected item
+                        println!("Current cost per unit for {}: ${:.2}", item.name, item.cost_per_unit);
+                        input.clear();
+
+                        println!("Enter updated item cost per unit: ");
+                        
+                        // Prompt user for updated cost per unit
+                        io::stdout().flush().unwrap();
+                        io::stdin().read_line(&mut input).unwrap();
+                        let new_cost: f32 = input.trim().parse().unwrap_or(0.0);
+
+                        // Call function to update item cost
+                        let _update = update_inventory_cost(conn, inventory_item_id, new_cost);
+
+                        // Confirm cost updated successfully to user
+                        println!("✅ Successfully updated cost to ${:.2}!", new_cost);
+                    } else {
+                        println!("❌ Item not found!");
+                    }
+
+                    // Pause app and wait for user input
+                    wait_for_enter();
+
+                }
+                // Update item quantity
+                "2" => {
+                    if let Some(item) = selected_item {
+                        // Output current quatity of selected item 
+                        println!("Current quantity for {}: ${:.2}", item.name, item.quantity);
+                        input.clear();
+
+                        // Prompt user for updated quantity
+                        io::stdout().flush().unwrap();
+                        io::stdin().read_line(&mut input).unwrap();
+                        let new_quantity: f32 = input.trim().parse().unwrap_or(0.0);
+
+                        // Call function to update item quantity
+                        let _update = update_inventory_quantity(conn, inventory_item_id, new_quantity);
+                        
+                        // Confirm quantity updated successfully to user
+                        println!("✅ Successfully updated quantity to {:.2} units!", new_quantity);
+                    } else {
+                        println!("❌ Item not found!");
+                    }
+
+                    // Pause app and wait for user input
+                    wait_for_enter();
+                }
+                &_ => {
+                    println!("Error--Invalid option\n Returning to Main Menu...");
+                }
+            }
+        }
+        &_ => {
+            println!("Error--Invalid option\n Returning to Main Menu...");
+        }
+
+    }
+}
+
+pub fn handle_recipe_menu(conn: &Connection) {
+    
+}
+
+pub fn handle_transaction_menu(conn: &Connection) {
+
+}
+
+pub fn handle_utilities_menu(conn: &Connection) {
+
+
+}
+
+// function to displat CLI via main.rs
+pub fn show_main_menu(conn: &Connection) {
+    println!("\n🍞 Welcome to Bakery Manager CLI 🍞");
+    
+    println!("2. View Recipes");
+    
+    println!("4. Add Transaction");
+    println!("5. View Transactions");
+    println!("6. Filter Transactions");
+    println!("7. View Recipe Ingredients");
+    println!("8. Calculate Recipe Cost");
+    println!("9. Deduct Recipe from Inventory");
+    println!("10. Print CSV Transaction Report");
+    println!("11. Calculate and Save unit MSRP for Recipe");
+    
+    println!("100. Exit");
+    println!("110. Debug");
+    print!("Choose an option: ");
+    io::stdout().flush().unwrap();
+
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+
+    match input.trim() {
+        
         "2" => {
             let recipes = get_recipe_collection(conn).expect("Error fetching recipes");
             println!("\n📖 Recipes:");
@@ -329,91 +495,7 @@ pub fn show_main_menu(conn: &Connection) {
             println!("✅ MSRP saved for {}!", recipe.name);
         }
         "12" => {
-            let mut input = String::new();
-
-            println!("🍞 Update Inventory Item");
-
-            // Fetch inventory
-            let inventory = get_all_inventory(conn).expect("Error fetching inventory");
-            println!("\n📦 Select an Item to update:");
-            for item in &inventory {
-                println!(
-                    "{} - {}",
-                    item.id, item.name
-                );
-            }
             
-            // Identify inventory item to update
-            print!("Enter item ID: ");
-            io::stdout().flush().unwrap();
-            io::stdin().read_line(&mut input).unwrap();
-            let inventory_item_id: i32 = input.trim().parse().unwrap_or(0);
-
-            // Find selected item
-            let selected_item = inventory.iter().find(|item| item.id == inventory_item_id);
-
-            // Clear input before next read
-            input.clear();
-            
-            // Identify which value to update
-            println!("What would you like to update?\n1. Update Item Cost\n2. Update Item Quantity");
-            io::stdout().flush().unwrap();
-            io::stdin().read_line(&mut input).unwrap();
-
-            match input.trim() {
-                "1" => {
-                    if let Some(item) = selected_item {
-                        // Output current cost per unit of selected item
-                        println!("Current cost per unit for {}: ${:.2}", item.name, item.cost_per_unit);
-                        input.clear();
-
-                        println!("Enter updated item cost per unit: ");
-                        
-                        // Prompt user for updated cost per unit
-                        io::stdout().flush().unwrap();
-                        io::stdin().read_line(&mut input).unwrap();
-                        let new_cost: f32 = input.trim().parse().unwrap_or(0.0);
-
-                        // Call function to update item cost
-                        let _update = update_inventory_cost(conn, inventory_item_id, new_cost);
-
-                        // Confirm cost updated successfully to user
-                        println!("✅ Successfully updated cost to ${:.2}!", new_cost);
-                    } else {
-                        println!("❌ Item not found!");
-                    }
-
-                    // Pause app and wait for user input
-                    wait_for_enter();
-
-                }
-                "2" => {
-                    if let Some(item) = selected_item {
-                        // Output current quatity of selected item 
-                        println!("Current quantity for {}: ${:.2}", item.name, item.quantity);
-                        input.clear();
-
-                        // Prompt user for updated quantity
-                        io::stdout().flush().unwrap();
-                        io::stdin().read_line(&mut input).unwrap();
-                        let new_quantity: f32 = input.trim().parse().unwrap_or(0.0);
-
-                        // Call function to update item quantity
-                        let _update = update_inventory_quantity(conn, inventory_item_id, new_quantity);
-                        
-                        // Confirm quantity updated successfully to user
-                        println!("✅ Successfully updated quantity to {:.2} units!", new_quantity);
-                    } else {
-                        println!("❌ Item not found!");
-                    }
-
-                    // Pause app and wait for user input
-                    wait_for_enter();
-                }
-                &_ => {
-                    println!("Error--Invalid option\n Returning to Main Menu...");
-                }
-            }
 
             
         }
