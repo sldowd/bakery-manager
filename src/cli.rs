@@ -511,9 +511,16 @@ pub fn handle_transaction_menu(conn: &Connection) {
     }
 }
 
+// T
 pub fn handle_utilities_menu(conn: &Connection) {
     println!("🛠 Utilities");
-    println!("1. Debug");
+    println!("1. Backup Database");
+    println!("2. Reset Database");
+    println!("3. View System Info");
+    println!("4. Run Data Integrity Check");
+    println!("5. Compact (VACUUM) Database");
+    println!("100. Return to Main Menu");
+
     print!("Choose an option: ");
     io::stdout().flush().unwrap();
 
@@ -521,22 +528,29 @@ pub fn handle_utilities_menu(conn: &Connection) {
     io::stdin().read_line(&mut input).unwrap();
 
     match input.trim() {
-        
         "1" => {
-            let count: i32 = conn.query_row(
-                "SELECT COUNT(*) FROM recipe_ingredients",
-                [],
-                |row| row.get(0),
-            ).unwrap();
-            
-            println!("Rows in recipe_ingredients: {}", count);
-            // Pause app and wait for user input
-            wait_for_enter();
+            todo!("Implement Backup Database feature");
+        }
+        "2" => {
+            todo!("Implement Reset Database feature");
+        }
+        "3" => {
+            todo!("Implement View System Info feature");
+        }
+        "4" => {
+            todo!("Implement Run Data Integrity Check feature");
+        }
+        "5" => {
+            todo!("Implement Compact (VACUUM) Database feature");
+        }
+        "100" => {
+            println!("Returning to Main Menu...");
+            std::process::exit(0);
         }
         _ => println!("❌ Invalid option. Try again."),
     }
-
 }
+
 
 // function to displat CLI via main.rs
 pub fn show_main_menu(conn: &Connection) {
