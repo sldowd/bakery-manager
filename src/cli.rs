@@ -3,6 +3,13 @@ use crate::db::{add_inventory_item, add_transaction, calculate_recipe_cost, dedu
 use rusqlite::Connection;
 use std::io::{self, Write};
 
+pub fn wait_for_enter() {
+    let mut dummy_input = String::new();
+    println!("\nPress Enter to return to the Main Menu...");
+    io::stdout().flush().unwrap();
+    io::stdin().read_line(&mut dummy_input).unwrap();
+}
+
 // function to displat CLI via main.rs
 pub fn show_main_menu(conn: &Connection) {
     println!("\n🍞 Welcome to Bakery Manager CLI 🍞");
@@ -377,10 +384,8 @@ pub fn show_main_menu(conn: &Connection) {
                     }
 
                     // Pause app and wait for user input
-                    let mut dummy_input = String::new();
-                    println!("\nPress Enter to return to the Main Menu...");
-                    io::stdout().flush().unwrap();
-                    io::stdin().read_line(&mut dummy_input).unwrap();
+                    wait_for_enter();
+
                 }
                 "2" => {
                     if let Some(item) = selected_item {
@@ -403,18 +408,14 @@ pub fn show_main_menu(conn: &Connection) {
                     }
 
                     // Pause app and wait for user input
-                    let mut dummy_input = String::new();
-                    println!("\nPress Enter to return to the Main Menu...");
-                    io::stdout().flush().unwrap();
-                    io::stdin().read_line(&mut dummy_input).unwrap();
-
+                    wait_for_enter();
                 }
                 &_ => {
                     println!("Error--Invalid option\n Returning to Main Menu...");
                 }
             }
 
-
+            
         }
         "100" => {
             println!("👋 Exiting. Goodbye!");
@@ -432,3 +433,4 @@ pub fn show_main_menu(conn: &Connection) {
         _ => println!("❌ Invalid option. Try again."),
     }
 }
+
