@@ -4,7 +4,11 @@ use crate::db::{add_inventory_item, add_transaction, calculate_recipe_cost, dedu
     update_inventory_cost, update_inventory_quantity, update_msrp_for_recipe, write_csv_transaction_report, reset_database};
 use rusqlite::Connection;
 use std::io::{self, Write};
+use chrono::Local;
+use std::fs;
+use std::path::Path;
 
+// CLI Helper Functions
 // Pauses app and waits for user input
 pub fn wait_for_enter() {
     let mut dummy_input = String::new();
@@ -13,6 +17,27 @@ pub fn wait_for_enter() {
     io::stdin().read_line(&mut dummy_input).unwrap();
 }
 
+// Backup database utility function
+pub fn backup_database() {
+    let source_path = Path::new("bakery.db");
+    if !source_path.exists() {
+        println!("❌ Error: bakery.db not found. No backup created.");
+        return;
+    }
+
+    let now = Local::now();
+    let timestamp = now.format("%Y-%m-%d_%H-%M-%S").to_string();
+    let backup_filename = format!("bakery_backup_{}.db", timestamp);
+
+    if let Err(e) = fs::copy(source_path, &backup_filename) {
+        println!("❌ Error copying database: {}", e);
+    } else {
+        println!("✅ Database backed up successfully to: {}", backup_filename);
+    }
+}
+
+// Menu Functions
+// Inventory Menu
 pub fn handle_inventory_menu(conn: &Connection) {
     println!("🍞 Inventory Management");
     println!("1. View Inventory");
@@ -186,6 +211,7 @@ pub fn handle_inventory_menu(conn: &Connection) {
     }
 }
 
+// Recipe Menu
 pub fn handle_recipe_menu(conn: &Connection) {
     println!("📖 Recipe Management");
     println!("1. View Recipes");
@@ -351,6 +377,7 @@ pub fn handle_recipe_menu(conn: &Connection) {
 
 }
 
+// Transaction Menu
 pub fn handle_transaction_menu(conn: &Connection) {
     println!("💰 Transaction Management");
     println!("1. Add Transaction");
@@ -513,7 +540,7 @@ pub fn handle_transaction_menu(conn: &Connection) {
     }
 }
 
-// T
+// Utilities Menu
 pub fn handle_utilities_menu(conn: &Connection) {
     println!("🛠 Utilities");
     println!("1. Backup Database");
@@ -531,11 +558,23 @@ pub fn handle_utilities_menu(conn: &Connection) {
 
     match input.trim() {
         "1" => {
-            todo!("Implement Backup Database feature");
+            backup_database();
+            wait_for_enter();
         }
         "2" => {
-            let _ = reset_database(conn);
-            println!("✅ Database has been reset");
+            println!("⚠️  This will delete ALL inventory, recipes, and transactions.");
+            println!("Type 'YES' to confirm: ");
+            let mut confirm = String::new();
+            io::stdin().read_line(&mut confirm).unwrap();
+
+            if confirm.trim() == "YES" {
+                match reset_database(conn) {
+                    Ok(_) => println!("✅ Database has been reset."),
+                    Err(e) => println!("❌ Failed to reset database: {}", e),
+                }
+            } else {
+                println!("❌ Reset cancelled.");
+            }
             // Pause app and wait for user input
             wait_for_enter();
         }
