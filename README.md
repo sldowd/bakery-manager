@@ -26,14 +26,18 @@ This app is designed to:
 
 ---
 
-## ✅ MVP Features
+## ✅ MVP Features — Completed 🎉
 
-- [ ] Create and update **inventory items**
-- [ ] Store and retrieve **recipes**
-- [ ] Calculate cost per recipe or unit
-- [ ] Track **expenses and income**
-- [ ] Export reports (CSV or JSON)
-- [ ] Clean CLI interface
+- [x] Create and update **inventory items**
+- [x] Store and retrieve **recipes**
+- [x] Calculate cost per recipe or unit (includes MSRP per unit)
+- [x] Track **expenses and income**
+- [x] Export reports (CSV)
+- [x] Clean CLI interface with grouped menus and utilities
+
+> 🎯 MVP delivered and tagged as [`v1.0.0-mvp`](https://github.com/sldowd/bakery-manager/releases/tag/v1.0.0-mvp)  
+> Post-MVP planning underway!
+
 
 ---
 
