@@ -2,7 +2,7 @@
 use crate::db::{add_inventory_item, add_transaction, calculate_recipe_cost, deduct_recipe_from_inventory, filter_by_date, 
     get_all_inventory, get_ingredients_for_recipe, get_recipe_collection, read_transactions, transaction_filter, 
     update_inventory_cost, update_inventory_quantity, update_msrp_for_recipe, write_csv_transaction_report, reset_database,
-    run_integrity_check
+    run_integrity_check, vacuum_database
 };
 use rusqlite::Connection;
 use std::io::{self, Write};
@@ -37,7 +37,9 @@ pub fn backup_database() {
     } else {
         println!("✅ Database backed up successfully to: {}", backup_filename);
     }
+    wait_for_enter();
 }
+
 
 // View system info
 pub fn view_system_info() {
@@ -58,6 +60,8 @@ pub fn view_system_info() {
 
     // Crude OS guess
     println!("🖥️  OS: {}", std::env::consts::OS);
+
+    wait_for_enter();
 }
 
 // Handle data integrity check
@@ -82,6 +86,17 @@ pub fn handle_data_integrity_check(conn: &Connection) {
     wait_for_enter();
 }
 
+// Handle database vacuum
+pub fn handle_vacuum(conn: &Connection) {
+    println!("🧹 Compacting database...");
+
+    match vacuum_database(conn) {
+        Ok(_) => println!("✅ Database compacted successfully."),
+        Err(e) => println!("❌ Failed to compact database: {}", e),
+    }
+
+    wait_for_enter();
+}
 
 // Menu Functions
 // Inventory Menu
@@ -606,7 +621,6 @@ pub fn handle_utilities_menu(conn: &Connection) {
     match input.trim() {
         "1" => {
             backup_database();
-            wait_for_enter();
         }
         "2" => {
             println!("⚠️  This will delete ALL inventory, recipes, and transactions.");
@@ -627,13 +641,12 @@ pub fn handle_utilities_menu(conn: &Connection) {
         }
         "3" => {
             view_system_info();
-            wait_for_enter();
         }
         "4" => {
             handle_data_integrity_check(conn);
         }
         "5" => {
-            todo!("Implement Compact (VACUUM) Database feature");
+           handle_vacuum(conn);
         }
         "100" => {
             println!("Returning to Main Menu...");

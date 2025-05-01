@@ -497,3 +497,9 @@ pub fn run_integrity_check(conn: &Connection) -> Result<Vec<String>> {
     Ok(issues)
 }
 
+// Vacuum database
+pub fn vacuum_database(conn: &Connection) -> Result<()> {
+    conn.execute("VACUUM", [])?;
+    Ok(())
+}
+
