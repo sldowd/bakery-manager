@@ -7,6 +7,7 @@ use std::io::{self, Write};
 use chrono::Local;
 use std::fs;
 use std::path::Path;
+use std::env;
 
 // CLI Helper Functions
 // Pauses app and waits for user input
@@ -34,6 +35,29 @@ pub fn backup_database() {
     } else {
         println!("✅ Database backed up successfully to: {}", backup_filename);
     }
+}
+
+// View system info
+pub fn view_system_info() {
+    println!("📋 System Info:");
+
+    // Current working directory
+    match env::current_dir() {
+        Ok(path) => println!("📁 Current Directory: {}", path.display()),
+        Err(e) => println!("❌ Could not get current directory: {}", e),
+    }
+
+    // Does the database exist?
+    if fs::metadata("bakery.db").is_ok() {
+        println!("✅ bakery.db found.");
+    } else {
+        println!("❌ bakery.db not found.");
+    }
+
+    // Crude OS guess
+    println!("🖥️  OS: {}", std::env::consts::OS);
+
+    // Rust version? You can only show it if you store it manually (not available programmatically at runtime)
 }
 
 // Menu Functions
@@ -579,7 +603,8 @@ pub fn handle_utilities_menu(conn: &Connection) {
             wait_for_enter();
         }
         "3" => {
-            todo!("Implement View System Info feature");
+            view_system_info();
+            wait_for_enter();
         }
         "4" => {
             todo!("Implement Run Data Integrity Check feature");
@@ -596,7 +621,7 @@ pub fn handle_utilities_menu(conn: &Connection) {
 }
 
 
-// function to displat CLI via main.rs
+// function to display main CLI menu via main.rs
 pub fn show_main_menu(conn: &Connection) {
     println!("\n🍞 Welcome to Bakery Manager CLI 🍞");
     
