@@ -40,7 +40,24 @@ pub fn backup_database() {
     wait_for_enter();
 }
 
+// Handle database reset
+pub fn handle_database_reset(conn: &Connection) {
+    println!("⚠️  This will delete ALL inventory, recipes, and transactions.");
+            println!("Type 'YES' to confirm: ");
+            let mut confirm = String::new();
+            io::stdin().read_line(&mut confirm).unwrap();
 
+            if confirm.trim() == "YES" {
+                match reset_database(conn) {
+                    Ok(_) => println!("✅ Database has been reset."),
+                    Err(e) => println!("❌ Failed to reset database: {}", e),
+                }
+            } else {
+                println!("❌ Reset cancelled.");
+            }
+            // Pause app and wait for user input
+            wait_for_enter();
+}
 // View system info
 pub fn view_system_info() {
     println!("📋 System Info:");
@@ -623,21 +640,7 @@ pub fn handle_utilities_menu(conn: &Connection) {
             backup_database();
         }
         "2" => {
-            println!("⚠️  This will delete ALL inventory, recipes, and transactions.");
-            println!("Type 'YES' to confirm: ");
-            let mut confirm = String::new();
-            io::stdin().read_line(&mut confirm).unwrap();
-
-            if confirm.trim() == "YES" {
-                match reset_database(conn) {
-                    Ok(_) => println!("✅ Database has been reset."),
-                    Err(e) => println!("❌ Failed to reset database: {}", e),
-                }
-            } else {
-                println!("❌ Reset cancelled.");
-            }
-            // Pause app and wait for user input
-            wait_for_enter();
+            handle_database_reset(conn);
         }
         "3" => {
             view_system_info();
@@ -655,7 +658,6 @@ pub fn handle_utilities_menu(conn: &Connection) {
         _ => println!("❌ Invalid option. Try again."),
     }
 }
-
 
 // function to display main CLI menu via main.rs
 pub fn show_main_menu(conn: &Connection) {
