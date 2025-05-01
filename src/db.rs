@@ -467,3 +467,33 @@ pub fn update_msrp_for_recipe(conn: &Connection, recipe_id: i32, msrp_per_unit: 
     Ok(())
 }
 
+// Check data integrity in bakery.db
+pub fn run_integrity_check(conn: &Connection) -> Result<Vec<String>> {
+    let mut issues = Vec::new();
+
+    // Check for orphaned recipe ingredients
+    let orphan_query = "
+        SELECT COUNT(*) FROM recipe_ingredients ri
+        LEFT JOIN recipes r ON ri.recipe_id = r.id
+        LEFT JOIN inventory i ON ri.ingredient_id = i.id
+        WHERE r.id IS NULL OR i.id IS NULL;
+    ";
+    let orphan_count: i32 = conn.query_row(orphan_query, [], |row| row.get(0))?;
+    if orphan_count > 0 {
+        issues.push(format!("Found {} orphaned recipe_ingredients entries.", orphan_count));
+    }
+
+    // Check for recipes with no ingredients
+    let no_ingredient_query = "
+        SELECT COUNT(*) FROM recipes r
+        LEFT JOIN recipe_ingredients ri ON ri.recipe_id = r.id
+        WHERE ri.recipe_id IS NULL;
+    ";
+    let no_ingredients: i32 = conn.query_row(no_ingredient_query, [], |row| row.get(0))?;
+    if no_ingredients > 0 {
+        issues.push(format!("Found {} recipes without any ingredients.", no_ingredients));
+    }
+
+    Ok(issues)
+}
+

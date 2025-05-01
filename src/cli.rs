@@ -1,7 +1,9 @@
 // src/cli.rs
 use crate::db::{add_inventory_item, add_transaction, calculate_recipe_cost, deduct_recipe_from_inventory, filter_by_date, 
     get_all_inventory, get_ingredients_for_recipe, get_recipe_collection, read_transactions, transaction_filter, 
-    update_inventory_cost, update_inventory_quantity, update_msrp_for_recipe, write_csv_transaction_report, reset_database};
+    update_inventory_cost, update_inventory_quantity, update_msrp_for_recipe, write_csv_transaction_report, reset_database,
+    run_integrity_check
+};
 use rusqlite::Connection;
 use std::io::{self, Write};
 use chrono::Local;
@@ -56,9 +58,30 @@ pub fn view_system_info() {
 
     // Crude OS guess
     println!("🖥️  OS: {}", std::env::consts::OS);
-
-    // Rust version? You can only show it if you store it manually (not available programmatically at runtime)
 }
+
+// Handle data integrity check
+pub fn handle_data_integrity_check(conn: &Connection) {
+    println!("🔍 Running Data Integrity Check...");
+
+    match run_integrity_check(conn) {
+        Ok(issues) => {
+            if issues.is_empty() {
+                println!("✅ All integrity checks passed! No issues found.");
+            } else {
+                for issue in issues {
+                    println!("❌ {}", issue);
+                }
+            }
+        }
+        Err(e) => {
+            println!("❌ Error during integrity check: {}", e);
+        }
+    }
+
+    wait_for_enter();
+}
+
 
 // Menu Functions
 // Inventory Menu
@@ -607,7 +630,7 @@ pub fn handle_utilities_menu(conn: &Connection) {
             wait_for_enter();
         }
         "4" => {
-            todo!("Implement Run Data Integrity Check feature");
+            handle_data_integrity_check(conn);
         }
         "5" => {
             todo!("Implement Compact (VACUUM) Database feature");
