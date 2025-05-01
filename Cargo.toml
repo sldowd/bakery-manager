@@ -6,9 +6,7 @@ edition = "2021"
 
 
 [dependencies]
-rusqlite = "0.30.0"
-csv = "1.2"
-
-time = "0.3"  # for timestamps
-
+rusqlite = "0.35.0"
+csv = "1.2" # for csv report export
 serde = { version = "1.0", features = ["derive"] }
+chrono = "0.4" #for timestamp
