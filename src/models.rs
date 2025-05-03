@@ -28,8 +28,12 @@ pub struct RecipeIngredient {
     pub ingredient_id: i32,
     pub quantity_required: f32,
 }
+
+
+
 #[derive(Debug, Serialize)]
 pub struct Transaction {
+    //"Add additional fields to transaction table-- payee, payment type, second field for category"
     pub id: i32,
     pub date: String,
     pub transaction_type: String,
