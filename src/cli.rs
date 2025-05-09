@@ -298,6 +298,7 @@ pub fn handle_recipe_menu(conn: &Connection) {
     println!("3. Calculate Recipe Cost");
     println!("4. Deduct Recipe from Inventory");
     println!("5. Calculate Unit MSRP for Recipe");
+    println!("6. Calculate Baker's Percentage for Recipe");
     println!("100. Exit");
 
     print!("Choose an option: ");
