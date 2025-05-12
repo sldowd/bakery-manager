@@ -18,6 +18,9 @@ pub struct RecipeCollection {
     pub instructions: String,
     pub yield_quantity: i32,
     pub category: String,
+    pub prep_time: Option<String>,
+    pub bake_time: Option<String>,
+    pub total_time: Option<String>,
     pub msrp_per_unit: Option<f32>,
 }
 

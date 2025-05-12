@@ -105,6 +105,7 @@ pub fn handle_data_integrity_check(conn: &Connection) {
 
 // Handle database vacuum
 pub fn handle_vacuum(conn: &Connection) {
+
     println!("🧹 Compacting database...");
 
     match vacuum_database(conn) {
@@ -113,6 +114,208 @@ pub fn handle_vacuum(conn: &Connection) {
     }
 
     wait_for_enter();
+}
+
+// Helper function to calculate baker's percentages
+fn calculate_bakers_percentages(ingredients: &Vec<(String, f32, String)>) {
+    // Step 1: Find the total flour weight
+    let mut total_flour_weight: f32 = 0.0;
+    
+    for (name, qty, unit) in ingredients {
+        // Make sure we're only counting ingredients with weight units
+        if unit.to_lowercase() == "g" || 
+           unit.to_lowercase() == "grams" || 
+           unit.to_lowercase() == "kg" {
+            
+            // Convert to grams if needed
+            let quantity_in_grams = if unit.to_lowercase() == "kg" {
+                qty * 1000.0
+            } else {
+                *qty
+            };
+            
+            // Check if the ingredient name contains "flour" (case-insensitive)
+            if name.to_lowercase().contains("flour") {
+                total_flour_weight += quantity_in_grams;
+            }
+        }
+    }
+    // Display the ingredients
+    println!("\nIngredients:");
+    for (name, qty, unit) in ingredients {
+        println!("- {} {} {}", qty, unit, name);
+    }
+    // If no flour was found, we can't calculate baker's percentages
+    if total_flour_weight == 0.0 {
+        println!("\n⚠️ No flour found in the recipe. Cannot calculate baker's percentages.");
+        return;
+    }
+    
+    // Step 2: Calculate and display the baker's percentages
+    println!("\nBaker's Percentages:");
+    println!("---------------------");
+    
+    // First, print the flour entries (should total 100%)
+    let mut flour_percentage_total: f32 = 0.0;
+    println!("Flour Components:");
+    
+    for (name, qty, unit) in ingredients {
+        // Check if it's a weight unit
+        if unit.to_lowercase() == "g" || 
+           unit.to_lowercase() == "grams" || 
+           unit.to_lowercase() == "kg" {
+            
+            // Convert to grams if needed
+            let quantity_in_grams = if unit.to_lowercase() == "kg" {
+                qty * 1000.0
+            } else {
+                *qty
+            };
+            
+            if name.to_lowercase().contains("flour") {
+                let percentage = (quantity_in_grams / total_flour_weight) * 100.0;
+                flour_percentage_total += percentage;
+                println!("- {}: {:.1}%", name, percentage);
+            }
+        }
+    }
+    
+    println!("Total Flour: {:.1}% ({:.1} grams)", flour_percentage_total, total_flour_weight);
+    
+    // Then print all other ingredients
+    println!("\nOther Ingredients:");
+    for (name, qty, unit) in ingredients {
+        if unit.to_lowercase() == "g" || 
+           unit.to_lowercase() == "grams" || 
+           unit.to_lowercase() == "kg" {
+            
+            // Convert to grams if needed
+            let quantity_in_grams = if unit.to_lowercase() == "kg" {
+                qty * 1000.0
+            } else {
+                *qty
+            };
+            
+            if !name.to_lowercase().contains("flour") {
+                let percentage = (quantity_in_grams / total_flour_weight) * 100.0;
+                println!("- {}: {:.1}%", name, percentage);
+                
+                // Add special labels for common ingredients
+                if name.to_lowercase().contains("water") {
+                    println!("  (Hydration: {:.1}%)", percentage);
+                } else if name.to_lowercase().contains("salt") {
+                    println!("  (Salt percentage: {:.1}%)", percentage);
+                } else if name.to_lowercase().contains("yeast") && percentage < 2.0 {
+                    println!("  (Yeast percentage: {:.2}%)", percentage);
+                } else if name.to_lowercase().contains("starter") || 
+                          name.to_lowercase().contains("levain") || 
+                          name.to_lowercase().contains("sourdough") {
+                    println!("  (Starter percentage: {:.1}%)", percentage);
+                }
+            }
+        } else {
+            // For non-weight ingredients, just show them without percentages
+            println!("- {}: {} {} (not included in baker's percentages)", 
+                name, qty, unit);
+        }
+    }
+    
+    // Step 3: Detect and display special information about the recipe
+    let mut hydration = 0.0;
+    let mut salt_percentage = 0.0;
+    let mut has_commercial_yeast = false;
+    let mut has_sourdough = false;
+    let mut starter_qty = 0.0;
+    
+    for (name, qty, unit) in ingredients {
+        // Check if it's a weight unit
+        if unit.to_lowercase() == "g" || 
+           unit.to_lowercase() == "grams" || 
+           unit.to_lowercase() == "kg" {
+            
+            // Convert to grams if needed
+            let quantity_in_grams = if unit.to_lowercase() == "kg" {
+                qty * 1000.0
+            } else {
+                *qty
+            };
+            
+            let percentage = (quantity_in_grams / total_flour_weight) * 100.0;
+            
+            if name.to_lowercase().contains("water") {
+                hydration += percentage;
+            } else if name.to_lowercase().contains("salt") {
+                salt_percentage += percentage;
+            } else if name.to_lowercase().contains("yeast") && 
+                      !name.to_lowercase().contains("sourdough") {
+                has_commercial_yeast = true;
+            } else if name.to_lowercase().contains("starter") || 
+                      name.to_lowercase().contains("levain") || 
+                      name.to_lowercase().contains("sourdough") {
+                has_sourdough = true;
+                starter_qty = quantity_in_grams;
+            }
+        }
+    }
+    
+    // Adjust hydration if sourdough starter is present (assuming 100% hydration starter)
+    if has_sourdough && starter_qty > 0.0 {
+        // Calculate effective hydration from starter
+        // For 100% hydration starter, half is water and half is flour
+        let starter_water = starter_qty / 2.0;
+        
+        // Add water from starter to total hydration calculation
+        let starter_water_percentage = (starter_water / total_flour_weight) * 100.0;
+        println!("\nStarter contribution to hydration: {:.1}%", starter_water_percentage);
+        
+        // Note: We don't need to adjust total_flour_weight here since
+        // the flour in the starter was already counted in the total flour calculation
+    }
+    
+    // Print a recipe summary
+    println!("\nRecipe Summary:");
+    println!("Total flour: {:.1} grams", total_flour_weight);
+    if hydration > 0.0 {
+        println!("Hydration: {:.1}%", hydration);
+    }
+    if salt_percentage > 0.0 {
+        println!("Salt: {:.1}%", salt_percentage);
+    }
+    
+    // Detect what kind of bread this is
+    if has_commercial_yeast && has_sourdough {
+        println!("Type: Hybrid (commercial yeast + sourdough)");
+    } else if has_sourdough {
+        println!("Type: Sourdough");
+    } else if has_commercial_yeast {
+        println!("Type: Commercial yeast");
+    } else {
+        println!("Type: Quick bread or unknown (no yeast/starter detected)");
+    }
+    
+    // Baker's percentage analysis
+    println!("\nBaker's Percentage Analysis:");
+    if hydration >= 65.0 && hydration < 70.0 {
+        println!("Standard hydration level for most bread types");
+    } else if hydration >= 70.0 && hydration < 80.0 {
+        println!("High hydration - suitable for ciabatta, focaccia, or rustic breads");
+    } else if hydration >= 80.0 {
+        println!("Very high hydration - may be challenging to handle, consider stretch & folds");
+    } else if hydration < 65.0 && hydration >= 60.0 {
+        println!("Lower hydration - produces denser bread, easier to handle");
+    } else if hydration < 60.0 {
+        println!("Low hydration - typical for bagels, pretzels, or sandwich bread");
+    }
+    
+    if salt_percentage > 0.0 {
+        if salt_percentage < 1.8 {
+            println!("Salt is below standard range (1.8-2.2%)");
+        } else if salt_percentage > 2.2 {
+            println!("Salt is above standard range (1.8-2.2%)");
+        } else {
+            println!("Salt is within standard range (1.8-2.2%)");
+        }
+    }
 }
 
 // Menu Functions
@@ -314,8 +517,8 @@ pub fn handle_recipe_menu(conn: &Connection) {
             println!("\n📖 Recipes:");
             for recipe in recipes {
                 println!(
-                    "ID: {} - {} MSRP: ${:?}\nCategory: {:#} \n(yields {}): \n{:#}\n",
-                    recipe.id, recipe.name, recipe.msrp_per_unit, recipe.category, recipe.yield_quantity, recipe.instructions
+                    "ID: {} - {} MSRP: ${:?}\nCategory: {:#} \n(yields {})\nPrep time: {}\nBake time: {}\nTotal time: {}\n: \n{:#}\n",
+                    recipe.id, recipe.name, recipe.msrp_per_unit, recipe.category, recipe.yield_quantity, recipe.prep_time.unwrap_or("N/A".to_string()), recipe.bake_time.unwrap_or("N/A".to_string()), recipe.total_time.unwrap_or("N/A".to_string()), recipe.instructions
                 );
             }
             // Pause app and wait for user input
@@ -442,6 +645,52 @@ pub fn handle_recipe_menu(conn: &Connection) {
 
             println!("✅ MSRP saved for {}!", recipe.name);
 
+            // Pause app and wait for user input
+            wait_for_enter();
+        }
+        "6" => {
+            let recipes = get_recipe_collection(conn).expect("Error fetching recipes");
+        
+            println!("\nSelect a recipe to calculate baker's percentages:");
+            for recipe in &recipes {
+                println!("{}: {}", recipe.id, recipe.name);
+            }
+        
+            let mut input = String::new();
+            print!("Enter recipe ID: ");
+            io::stdout().flush().unwrap();
+            io::stdin().read_line(&mut input).unwrap();
+            let recipe_id: i32 = input.trim().parse().unwrap_or(0);
+        
+            // Fetch the selected recipe to display its name
+            let recipe = match recipes.iter().find(|r| r.id == recipe_id) {
+                Some(r) => r,
+                None => {
+                    println!("⚠️ Recipe not found.");
+                    wait_for_enter();
+                    return;
+                }
+            };
+        
+            // Get the recipe ingredients with their details from the database
+            let ingredients = get_ingredients_for_recipe(conn, recipe_id)
+                .expect("Failed to load recipe ingredients");
+            
+            if ingredients.is_empty() {
+                println!("⚠️ No ingredients found for that recipe.");
+            } else {
+                println!("\nRecipe: {}", recipe.name);
+                println!("Yield: {} units", recipe.yield_quantity);
+                
+                // Display the ingredients
+                println!("\nIngredients:");
+                for (name, qty, unit) in &ingredients {
+                    println!("- {} {} {}", qty, unit, name);
+                }
+                
+                // Calculate and display baker's percentages
+                calculate_bakers_percentages(&ingredients);
+            }
             // Pause app and wait for user input
             wait_for_enter();
         }

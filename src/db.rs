@@ -27,7 +27,10 @@ pub fn init_db(conn: &Connection) -> Result<()> {
             name TEXT NOT NULL,
             instructions TEXT NOT NULL,
             yield_quantity INTEGER NOT NULL,
-            category TEXT NOT NULL
+            category TEXT NOT NULL,
+            prep_time TEXT,
+            bake_time TEXT,
+            total_time TEXT
         );
 
         CREATE TABLE IF NOT EXISTS recipe_ingredients (
@@ -59,11 +62,66 @@ pub fn init_db(conn: &Connection) -> Result<()> {
 // seed inventory
 pub fn seed_inventory(conn: &Connection) -> Result<()> {
     let sample_inventory = vec![
-        ("Flour", "lbs", 50.0, 0.45),
-        ("Sugar", "lbs", 25.0, 0.55),
-        ("Butter", "lbs", 20.0, 3.25),
-        ("Eggs", "dozen", 10.0, 2.95),
-        ("Vanilla", "oz", 5.0, 1.75),
+        ("Flour, Bread", "kg", 15.8, 1.87),
+        ("Sugar, Organic Granulated", "kg", 9.5, 1.98),
+        ("Butter", "grams", 20.0, 3.25),
+        ("Eggs", "each", 15.0, 1.20),
+        ("Vanilla", "ml", 118.0, 0.09),
+        ("Butter, Unsalted", "grams", 907.18, 0.0138),
+        ("Sugar, Light Brown", "kg", 3.175, 2.20),
+        ("Flour, Whole Wheat", "kg", 2.268, 2.55),
+        ("Flour, Organic Rye", "kg", 1.361, 8.81),
+        ("Salt, Maldon Flaked Sea", "grams", 567.0, 0.0123),
+        ("Olive Oil, Organic Extra Virgin", "ml", 1998.0, 0.0075),
+        ("Salt, Kosher", "grams", 1360.78, 0.0022),
+        ("Flour, Unbleached All Purpose", "kg", 5.443, 1.98),
+        ("Water", "grams", 10000.0, 0.0),
+        ("Sourdough Starter", "grams", 1000.0, 0.00107),
+        ("Raisins", "grams", 500.0, 0.0077),
+        ("Cinnamon", "grams", 100.0, 0.033),
+        ("Milk Powder, Nonfat", "grams", 623.7, 0.02403),
+        ("Yeast, Instant", "grams", 113.4, 0.05811),
+        ("Honey", "grams", 566.99, 0.02646),
+        ("Vegetable Oil", "grams", 2721.55, 0.00202),
+        ("Chocolate Chips, Dark", "grams", 283.0, 0.02823),
+        ("Cocoa Powder", "grams", 226.8, 0.03082),
+        ("Espresso Powder", "grams", 100.0, 0.09490),
+        ("Confectioners' Sugar", "grams", 907.18, 0.00440),
+        ("Sesame Seeds", "grams", 60.1, 0.04975),
+        ("Orange Zest", "grams", 130.0, 0.00769),
+        ("Rosemary", "grams", 100.0, 0.0),
+        ("Cream Cheese", "grams", 170.0, 0.0),
+        ("Sour Cream", "grams", 90.0, 0.0),
+        ("Ricotta Cheese", "grams", 454.0, 0.0),
+        ("Lemon Zest", "grams", 5.0, 0.0),
+        ("Lemon Juice", "grams", 60.0, 0.0),
+        ("Turbinado Sugar", "grams", 34.0, 0.0),
+        ("Sparkling Sugar", "grams", 43.0, 0.0),
+        ("Cream of Tartar", "grams", 10.0, 0.0),
+        ("Potato Flour", "grams", 46.0, 0.0),
+        ("Dill Pickle Juice", "grams", 170.0, 0.0),
+        ("Caraway Seeds", "grams", 10.0, 0.0),
+        ("Dill Seeds", "grams", 10.0, 0.0),
+        ("Mustard Seeds", "grams", 10.0, 0.0),
+        ("Walnuts", "grams", 113.0, 0.0),
+        ("Dried Cranberries", "grams", 85.0, 0.0),
+        ("Fiori di Sicilia", "ml", 5.0, 0.0),
+        ("Vanilla Bean Paste", "ml", 5.0, 0.0),
+        ("Pizza Flour, 00", "grams", 180.0, 0.0),
+        ("Cake Flour", "grams", 180.0, 0.0),
+        ("Unbleached Cake Flour", "grams", 120.0, 0.0),
+        ("Egg Whites", "grams", 420.0, 0.0),
+        ("Baking Powder", "grams", 10.0, 0.0),
+        ("Pecans", "grams", 113.0, 0.0),
+        ("Apricot Preserves", "grams", 64.0, 0.0),
+        ("Apple", "grams", 113.0, 0.0),
+        ("Cornstarch", "grams", 14.0, 0.0),
+        ("Lime Juice", "grams", 5.0, 0.0),
+        ("Orange Juice", "grams", 15.0, 0.0),
+        ("Dried Apricots", "grams", 64.0, 0.0),
+        ("Currants", "grams", 85.0, 0.0),
+        ("Potato Flakes, Dried", "grams", 21.0, 0.0),
+        ("Egg White", "each", 1.0, 0.0)
     ];
 
     for (name, unit, quantity, cost_per_unit) in sample_inventory {
@@ -84,25 +142,25 @@ pub fn seed_recipes(conn: &Connection) -> Result<()> {
         (
             "Croissant aux Amandes",
             "1. Prepare croissant dough\n2. Make almond cream\n3. Fill, bake, dust with powdered sugar",
-            12, "Pastry",
+            12, "Pastry", "20 minutes", "25 minutes", "4 hours 30 minutes"
         ),
         (
             "Babka",
             "1. Make brioche dough\n2. Prepare chocolate filling\n3. Shape and proof\n4. Bake at 350F",
-            8, "Bread",
+            8, "Bread", "20 minutes", "25 minutes", "4 hours 30 minutes"
         ),
         (
             "Cinnamon Rolls",
             "1. Roll out dough\n2. Spread cinnamon sugar filling\n3. Slice and bake\n4. Ice while warm",
-            10, "Pastry"
+            10, "Pastry", "20 minutes", "25 minutes", "4 hours 30 minutes"
         ),
     ];
 
-    for (name, instructions, yield_quantity, category) in sample_recipes {
+    for (name, instructions, yield_quantity, category, prep_time, bake_time, total_time) in sample_recipes {
         conn.execute(
-            "INSERT INTO recipes (name, instructions, yield_quantity, category)
-             VALUES (?1, ?2, ?3, ?4)",
-            params![name, instructions, yield_quantity, category],
+            "INSERT INTO recipes (name, instructions, yield_quantity, category, prep_time, bake_time, total_time)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?)",
+            params![name, instructions, yield_quantity, category, prep_time, bake_time, total_time],
         )?;
     }
 
@@ -213,7 +271,7 @@ pub fn get_all_inventory(conn: &Connection) -> Result<Vec<InventoryItem>> {
 // Read recipes
 pub fn get_recipe_collection(conn: &Connection) -> Result<Vec<RecipeCollection>> {
     let mut stmt = conn.prepare(
-        "SELECT id, name, instructions, yield_quantity, category, msrp_per_unit FROM recipes"
+        "SELECT id, name, instructions, yield_quantity, category, prep_time, bake_time, total_time, msrp_per_unit FROM recipes"
     )?;
 
     let recipe_iter = stmt.query_map([], |row: &Row| {
@@ -223,7 +281,12 @@ pub fn get_recipe_collection(conn: &Connection) -> Result<Vec<RecipeCollection>>
             instructions: row.get(2)?,
             yield_quantity: row.get(3)?,
             category: row.get(4)?,
-            msrp_per_unit: row.get(5)?
+            prep_time: row.get(5)?,
+            bake_time: row.get(6)?,
+            total_time: row.get(7)?,
+            msrp_per_unit: row.get(8)?,
+
+
         })
     })?;
 
